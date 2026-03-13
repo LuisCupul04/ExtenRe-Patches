@@ -9,8 +9,8 @@
 package com.liskovsoft.youtubeapi.app.nsigsolver.runtime
 
 import androidx.annotation.GuardedBy
-import app.revanced.extension.shared.innertube.utils.ThrottlingParameterUtils
-import app.revanced.extension.shared.utils.Logger
+import com.extenre.extension.shared.innertube.utils.ThrottlingParameterUtils
+import com.extenre.extension.shared.utils.Logger
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.liskovsoft.youtubeapi.app.nsigsolver.common.CachedData

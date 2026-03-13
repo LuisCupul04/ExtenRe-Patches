@@ -8,8 +8,8 @@
 
 package com.liskovsoft.youtubeapi.app.nsigsolver.common
 
-import app.revanced.extension.shared.utils.ResourceUtils.getRawResource
-import app.revanced.extension.shared.utils.Utils
+import com.extenre.extension.shared.utils.ResourceUtils.getRawResource
+import com.extenre.extension.shared.utils.Utils
 import com.liskovsoft.youtubeapi.app.nsigsolver.impl.V8ChallengeProvider.libPrefix
 
 internal open class ScriptLoaderError(message: String, cause: Exception? = null) :
