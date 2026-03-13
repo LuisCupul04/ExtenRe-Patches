@@ -3,8 +3,8 @@
     <source
       width="350px"
       media="(prefers-color-scheme: dark)"
-      srcset="/data/user/0/com.termux/files/home/Extenre-patches/Logo/ExtenRe-headline/ExtenRe-Red.svg">
-    <img src="/data/user/0/com.termux/files/home/Extenre-patches/Logo/ExtenRe-headline/ExtenRe-Red.svg" alt="ExtenRe Patcher Logo" width="350px">
+      srcset="/Logo/ExtenRe-headline/ExtenRe-Red.svg">
+    <img src="/Logo/ExtenRe-headline/ExtenRe-Red.svg" alt="ExtenRe Patcher Logo" width="350px">
   </picture>
 </p>
     
