@@ -1,18 +1,26 @@
-package app.revanced.patches.music.layout.visual
+/*
+ * Copyright (C) 2026 LuisCupul04
+ * Copyright (C) 2022 inotia00
+ * Copyright (C) 2022 ReVanced LLC
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
 
-import app.revanced.patcher.patch.resourcePatch
-import app.revanced.patcher.patch.stringOption
-import app.revanced.patches.music.layout.branding.icon.customBrandingIconPatch
-import app.revanced.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
-import app.revanced.patches.music.utils.patch.PatchList.VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE_MUSIC
-import app.revanced.patches.music.utils.settings.ResourceUtils.SETTINGS_HEADER_PATH
-import app.revanced.patches.music.utils.settings.ResourceUtils.updatePatchStatus
-import app.revanced.patches.music.utils.settings.settingsPatch
-import app.revanced.util.ResourceGroup
-import app.revanced.util.copyResources
-import app.revanced.util.doRecursively
-import app.revanced.util.getStringOptionValue
-import app.revanced.util.underBarOrThrow
+package com.extenre.patches.music.layout.visual
+
+import com.extenre.patcher.patch.resourcePatch
+import com.extenre.patcher.patch.stringOption
+import com.extenre.patches.music.layout.branding.icon.customBrandingIconPatch
+import com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
+import com.extenre.patches.music.utils.patch.PatchList.VISUAL_PREFERENCES_ICONS_FOR_YOUTUBE_MUSIC
+import com.extenre.patches.music.utils.settings.ResourceUtils.SETTINGS_HEADER_PATH
+import com.extenre.patches.music.utils.settings.ResourceUtils.updatePatchStatus
+import com.extenre.patches.music.utils.settings.settingsPatch
+import com.extenre.util.ResourceGroup
+import com.extenre.util.copyResources
+import com.extenre.util.doRecursively
+import com.extenre.util.getStringOptionValue
+import com.extenre.util.underBarOrThrow
 import org.w3c.dom.Element
 
 private const val DEFAULT_ICON = "extension"
@@ -34,13 +42,13 @@ val visualPreferencesIconsPatch = resourcePatch(
             "Extension" to DEFAULT_ICON,
             "Gear" to "gear",
             "ReVanced" to "revanced",
-            "ReVanced Colored" to "revanced_colored",
+            "ReVanced Colored" to "extenre_colored",
             "RVX Letters" to "rvx_letters",
             "RVX Letters Bold" to "rvx_letters_bold",
             "YT alt" to "yt_alt",
         ),
-        title = "RVX settings menu icon",
-        description = "The icon for the RVX settings menu.",
+        title = "ExtenRe settings menu icon",
+        description = "The icon for the ExtenRe settings menu.",
         required = true,
     )
 
@@ -76,7 +84,7 @@ val visualPreferencesIconsPatch = resourcePatch(
         }
         val resourceGroup = ResourceGroup(
             "drawable",
-            "revanced_settings_icon.xml"
+            "extenre_settings_icon.xml"
         )
 
         try {
@@ -135,21 +143,21 @@ private val preferenceKey = setOf(
     "settings_header_about_youtube_music",
 
     // RVX settings.
-    "revanced_settings",
+    "extenre_settings",
 
-    "revanced_preference_screen_account",
-    "revanced_preference_screen_action_bar",
-    "revanced_preference_screen_ads",
-    "revanced_preference_screen_flyout",
-    "revanced_preference_screen_general",
-    "revanced_preference_screen_navigation",
-    "revanced_preference_screen_player",
-    "revanced_preference_screen_settings",
-    "revanced_preference_screen_video",
-    "revanced_preference_screen_ryd",
-    "revanced_preference_screen_return_youtube_username",
-    "revanced_preference_screen_sb",
-    "revanced_preference_screen_misc",
+    "extenre_preference_screen_account",
+    "extenre_preference_screen_action_bar",
+    "extenre_preference_screen_ads",
+    "extenre_preference_screen_flyout",
+    "extenre_preference_screen_general",
+    "extenre_preference_screen_navigation",
+    "extenre_preference_screen_player",
+    "extenre_preference_screen_settings",
+    "extenre_preference_screen_video",
+    "extenre_preference_screen_ryd",
+    "extenre_preference_screen_return_youtube_username",
+    "extenre_preference_screen_sb",
+    "extenre_preference_screen_misc",
 )
 
 // endregion.

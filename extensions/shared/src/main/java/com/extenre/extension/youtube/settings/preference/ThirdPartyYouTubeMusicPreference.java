@@ -209,7 +209,7 @@ public class ThirdPartyYouTubeMusicPreference extends CustomDialogListPreference
         final boolean usingThirdPartyApp = YouTubeMusic.findByPackageName(packageName) == null;
         adapter = new CustomDialogListPreference.ListPreferenceArrayAdapter(
                 context,
-                LAYOUT_REVANCED_CUSTOM_LIST_ITEM_CHECKED,
+                LAYOUT_EXTENRE_CUSTOM_LIST_ITEM_CHECKED,
                 getEntries(),
                 getEntryValues(),
                 usingThirdPartyApp

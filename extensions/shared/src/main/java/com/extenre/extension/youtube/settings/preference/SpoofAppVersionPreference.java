@@ -150,7 +150,7 @@ public class SpoofAppVersionPreference extends CustomDialogListPreference {
         final boolean isOther = AppVersion.findAppVersion(appVersionName) == AppVersion.OTHER;
         adapter = new CustomDialogListPreference.ListPreferenceArrayAdapter(
                 context,
-                LAYOUT_REVANCED_CUSTOM_LIST_ITEM_CHECKED,
+                LAYOUT_EXTENRE_CUSTOM_LIST_ITEM_CHECKED,
                 getEntries(),
                 getEntryValues(),
                 isOther

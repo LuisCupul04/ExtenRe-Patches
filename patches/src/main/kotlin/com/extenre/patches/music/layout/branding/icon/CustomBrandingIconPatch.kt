@@ -1,24 +1,32 @@
-package app.revanced.patches.music.layout.branding.icon
+/*
+ * Copyright (C) 2026 LuisCupul04
+ * Copyright (C) 2022 inotia00
+ * Copyright (C) 2022 ReVanced LLC
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
 
-import app.revanced.patcher.patch.PatchException
-import app.revanced.patcher.patch.booleanOption
-import app.revanced.patcher.patch.resourcePatch
-import app.revanced.patcher.patch.stringOption
-import app.revanced.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
-import app.revanced.patches.music.utils.patch.PatchList.CUSTOM_BRANDING_ICON_FOR_YOUTUBE_MUSIC
-import app.revanced.patches.music.utils.playservice.is_7_23_or_greater
-import app.revanced.patches.music.utils.playservice.versionCheckPatch
-import app.revanced.patches.music.utils.settings.ResourceUtils.setIconType
-import app.revanced.patches.music.utils.settings.ResourceUtils.updatePatchStatus
-import app.revanced.patches.music.utils.settings.settingsPatch
-import app.revanced.util.FilesCompat
-import app.revanced.util.ResourceGroup
-import app.revanced.util.Utils.trimIndentMultiline
-import app.revanced.util.copyAdaptiveIcon
-import app.revanced.util.copyResources
-import app.revanced.util.getResourceGroup
-import app.revanced.util.underBarOrThrow
-import app.revanced.util.valueOrThrow
+package com.extenre.patches.music.layout.branding.icon
+
+import com.extenre.patcher.patch.PatchException
+import com.extenre.patcher.patch.booleanOption
+import com.extenre.patcher.patch.resourcePatch
+import com.extenre.patcher.patch.stringOption
+import com.extenre.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
+import com.extenre.patches.music.utils.patch.PatchList.CUSTOM_BRANDING_ICON_FOR_YOUTUBE_MUSIC
+import com.extenre.patches.music.utils.playservice.is_7_23_or_greater
+import com.extenre.patches.music.utils.playservice.versionCheckPatch
+import com.extenre.patches.music.utils.settings.ResourceUtils.setIconType
+import com.extenre.patches.music.utils.settings.ResourceUtils.updatePatchStatus
+import com.extenre.patches.music.utils.settings.settingsPatch
+import com.extenre.util.FilesCompat
+import com.extenre.util.ResourceGroup
+import com.extenre.util.Utils.trimIndentMultiline
+import com.extenre.util.copyAdaptiveIcon
+import com.extenre.util.copyResources
+import com.extenre.util.getResourceGroup
+import com.extenre.util.underBarOrThrow
+import com.extenre.util.valueOrThrow
 import org.w3c.dom.Element
 import java.io.File
 

@@ -55,7 +55,7 @@ public class YouTubeHostActivity extends BaseHostActivity {
      */
     @Override
     protected int getContentViewResourceId() {
-        return LAYOUT_REVANCED_SETTINGS_WITH_TOOLBAR;
+        return LAYOUT_EXTENRE_SETTINGS_WITH_TOOLBAR;
     }
 
     /**

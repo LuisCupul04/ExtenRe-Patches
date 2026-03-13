@@ -46,7 +46,7 @@ private val changeStartPageResourcePatch = resourcePatch(
         fun appendStartPage(startPage: String) {
             addEntryValues(
                 "extenre_change_start_page_entries",
-                "@string/revanced_change_start_page_entry_$startPage",
+                "@string/extenre_change_start_page_entry_$startPage",
             )
             addEntryValues(
                 "extenre_change_start_page_entry_values",

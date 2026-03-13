@@ -1,8 +1,16 @@
-package app.revanced.patches.music.utils
+/*
+ * Copyright (C) 2026 LuisCupul04
+ * Copyright (C) 2022 inotia00
+ * Copyright (C) 2022 ReVanced LLC
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
 
-import app.revanced.patches.music.utils.resourceid.varispeedUnavailableTitle
-import app.revanced.util.fingerprint.legacyFingerprint
-import app.revanced.util.or
+package com.extenre.patches.music.utils
+
+import com.extenre.patches.music.utils.resourceid.varispeedUnavailableTitle
+import com.extenre.util.fingerprint.legacyFingerprint
+import com.extenre.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 
