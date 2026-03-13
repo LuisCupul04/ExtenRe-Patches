@@ -1,0 +1,49 @@
+/*
+ * Copyright (C) 2022 ReVanced LLC
+ * Copyright (C) 2022 inotia00
+ * Copyright (C) 2026 LuisCupul04
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
+
+package com.extenre.patches.shared.customspeed
+
+import com.extenre.util.fingerprint.legacyFingerprint
+import com.extenre.util.or
+import com.android.tools.smali.dexlib2.AccessFlags
+import com.android.tools.smali.dexlib2.Opcode
+
+internal val arrayGeneratorFingerprint = legacyFingerprint(
+    name = "arrayGeneratorFingerprint",
+    returnType = "[L",
+    accessFlags = AccessFlags.PUBLIC or AccessFlags.STATIC,
+    opcodes = listOf(
+        Opcode.CONST_4,
+        Opcode.NEW_ARRAY
+    ),
+    strings = listOf("0.0#")
+)
+
+internal val limiterFallBackFingerprint = legacyFingerprint(
+    name = "limiterFallBackFingerprint",
+    accessFlags = AccessFlags.PUBLIC or AccessFlags.FINAL,
+    parameters = listOf("L"),
+    opcodes = listOf(
+        Opcode.CONST_HIGH16,
+        Opcode.CONST_HIGH16,
+        Opcode.INVOKE_STATIC
+    ),
+    strings = listOf("Playback rate: %f")
+)
+
+internal val limiterFingerprint = legacyFingerprint(
+    name = "limiterFingerprint",
+    returnType = "V",
+    accessFlags = AccessFlags.PUBLIC or AccessFlags.FINAL,
+    parameters = listOf("F"),
+    opcodes = listOf(
+        Opcode.CONST_HIGH16,
+        Opcode.CONST_HIGH16,
+        Opcode.INVOKE_STATIC,
+    )
+)

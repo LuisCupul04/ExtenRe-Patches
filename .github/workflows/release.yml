@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - dev
+
+jobs:
+  release:
+    name: Release
+    permissions:
+      contents: write
+      packages: write   # Necesario si publicas en GitHub Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: "zulu"
+          java-version: "21"
+
+      - name: Cache Gradle
+        uses: burrunan/gradle-cache-action@v3
+
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
+        run: ./gradlew generatePatchesFiles clean
+
+      # Opcional: Publicar en GitHub Packages (solo en master)
+      # - name: Publish to GitHub Packages
+      #   if: github.ref == 'refs/heads/master'
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
+      #   run: ./gradlew publish
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          fingerprint: ${{ vars.GPG_FINGERPRINT }}
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
+        run: npm exec semantic-release
+
+      # Subir el archivo .EXRE a la release (solo en master)
+      - name: Upload EXRE to Release
+        if: github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: patches/build/libs/*.EXRE   # Ajusta la ruta si es necesario
+        env:
+          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}

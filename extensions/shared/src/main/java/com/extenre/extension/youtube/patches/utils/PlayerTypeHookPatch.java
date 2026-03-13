@@ -1,0 +1,62 @@
+/*
+ * Copyright (C) 2022 ReVanced LLC
+ * Copyright (C) 2022 inotia00
+ * Copyright (C) 2026 LuisCupul04
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
+
+package com.extenre.extension.youtube.patches.utils;
+
+import android.view.View;
+
+import androidx.annotation.Nullable;
+
+import com.extenre.extension.youtube.shared.PlayerType;
+import com.extenre.extension.youtube.shared.ShortsPlayerState;
+import com.extenre.extension.youtube.shared.VideoState;
+
+@SuppressWarnings("unused")
+public class PlayerTypeHookPatch {
+    /**
+     * Injection point.
+     */
+    public static void setPlayerType(@Nullable Enum<?> youTubePlayerType) {
+        if (youTubePlayerType == null) return;
+
+        PlayerType.setFromString(youTubePlayerType.name());
+    }
+
+    /**
+     * Injection point.
+     */
+    public static void setVideoState(@Nullable Enum<?> youTubeVideoState) {
+        if (youTubeVideoState == null) return;
+
+        VideoState.setFromString(youTubeVideoState.name());
+    }
+
+    /**
+     * Injection point.
+     * <p>
+     * Add a listener to the shorts player overlay View.
+     * Triggered when a shorts player is attached or detached to Windows.
+     *
+     * @param view shorts player overlay (R.id.reel_watch_player).
+     */
+    public static void onShortsCreate(View view) {
+        view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(@Nullable View v) {
+                ShortsPlayerState.set(ShortsPlayerState.OPEN);
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(@Nullable View v) {
+                ShortsPlayerState.set(ShortsPlayerState.CLOSED);
+            }
+        });
+    }
+
+}
+
