@@ -1,8 +1,8 @@
 import java.lang.Boolean.TRUE
 
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.protobuf)
+    id("com.android.library")
+    alias(libs.plugins.protobuf)   // mantén este si usas protobuf
 }
 
 extension {
