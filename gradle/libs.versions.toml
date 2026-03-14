@@ -30,6 +30,6 @@ protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protoc" }
 
 [plugins]
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android" }
 android-library = { id = "com.android.library" }   #// ← sin version.ref
 protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }
