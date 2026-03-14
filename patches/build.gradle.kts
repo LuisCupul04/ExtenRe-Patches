@@ -8,9 +8,11 @@ patches {
     }
 }
 
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+
 configurations.runtimeClasspath {
     attributes {
-        attribute(Attribute.of("org.jetbrains.kotlin.platform.type", String::class.java), "androidJvm")
+        attribute(KotlinPlatformType.attribute, KotlinPlatformType.androidJvm)
     }
 }
 
