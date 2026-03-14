@@ -1,10 +1,24 @@
 import java.lang.Boolean.TRUE
 
 plugins {
-
+    id("maven-publish")
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     alias(libs.plugins.protobuf)
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("release") {
+            from(components["release"]) // Publica la variante release
+            groupId = "com.extenre.extensions"
+            artifactId = "shared"
+            version = "1.0.0" // o la versión que corresponda
+        }
+    }
+    repositories {
+        mavenLocal() // Para pruebas locales, o configura GitHub Packages
+    }
 }
 
 extension {

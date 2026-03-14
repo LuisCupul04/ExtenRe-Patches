@@ -35,7 +35,7 @@ configurations.runtimeClasspath {
 }
 
 dependencies {
-    implementation(project(":extensions:shared"))  // Sin targetConfiguration
+    implementation("com.extenre.extensions:shared:1.0.0") // la coordenada que definiste
     implementation("com.extenre:extenre-patcher:20.0.1.RE")
     implementation(libs.gson)
 }
