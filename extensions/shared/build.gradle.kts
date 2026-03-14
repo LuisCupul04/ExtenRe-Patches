@@ -10,7 +10,7 @@ plugins {
 publishing {
     publications {
         create<MavenPublication>("release") { // El nombre de la publicación puede ser "release"
-            from(components["default"]) // ✅ Cambia "release" por "default"
+            from(components["release"])
             groupId = "com.extenre.extensions"
             artifactId = "shared"
             version = "1.0.0"
