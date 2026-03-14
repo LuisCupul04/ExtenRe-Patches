@@ -30,7 +30,7 @@ configurations.runtimeClasspath {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
         attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
-        attribute(Attribute.of("artifactType", String::class.java), "jar")
+        attribute(Attribute.of("artifactType", String::class.java), "android-classes-jar") // ← Cambio clave
     }
 }
 
