@@ -24,12 +24,12 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      # Cambio a distribución microsoft con versión exacta
+      # Usamos Microsoft JDK con la versión 21 (última disponible)
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: "microsoft"
-          java-version: "21.0.6"
+          java-version: "21"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
