@@ -8,10 +8,16 @@ patches {
     }
 }
 
+configurations.runtimeClasspath {
+    attributes {
+        attribute(Attribute.of("org.jetbrains.kotlin.platform.type", String::class.java), "androidJvm")
+    }
+}
+
 dependencies {
     // Used by JsonGenerator.
+    implementation(project(":extensions:shared", configuration = "releaseRuntimeElements"))
     implementation("com.extenre:extenre-patcher:20.0.1.RE")
-    implementation(project(":extensions:shared"))
     implementation(libs.gson)
 }
 
