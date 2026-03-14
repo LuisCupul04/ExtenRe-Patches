@@ -1,4 +1,11 @@
 pluginManagement {
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == "com.android.library") {
+                useVersion("8.14.0")   // Fuerza AGP 8.14.0
+            }
+        }
+    }
     repositories {
         google()
         mavenCentral()
@@ -30,9 +37,4 @@ plugins {
 }
 
 rootProject.name = "extenre-patches"
-
-include(":patches")
-include(":extensions:shared:stub")
-include(":extensions:shared")
-include(":extensions:spoof-signature")
-include(":extensions:spoof-wifi")
+include(":patches", ":extensions:shared:stub", ":extensions:shared", ":extensions:spoof-signature", ":extensions:spoof-wifi")
