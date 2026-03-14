@@ -14,20 +14,28 @@ patches {
     }
 }
 
+configurations.compileClasspath {
+    attributes {
+        attribute(KotlinPlatformType.attribute, KotlinPlatformType.jvm)
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_API))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
+        attribute(Attribute.of("artifactType", String::class.java), "jar")
+    }
+}
+
 configurations.runtimeClasspath {
     attributes {
         attribute(KotlinPlatformType.attribute, KotlinPlatformType.androidJvm)
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
         attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 21)
-        attribute(Attribute.of("artifactType", String::class.java), "jar") // ← NUEVO
+        attribute(Attribute.of("artifactType", String::class.java), "jar")
     }
 }
 
 dependencies {
-    implementation(project(":extensions:shared")) {
-        targetConfiguration = "releaseRuntimeElements"
-    }
+    implementation(project(":extensions:shared"))  // Sin targetConfiguration
     implementation("com.extenre:extenre-patcher:20.0.1.RE")
     implementation(libs.gson)
 }
