@@ -35,7 +35,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":patcher"))
+    api("com.extenre:extenre-patcher:20.0.1.RE")   // api para que sea transitiva
     
     compileOnly(libs.annotation)
     compileOnly(libs.preference)

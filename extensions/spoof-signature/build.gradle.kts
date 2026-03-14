@@ -30,5 +30,6 @@ android {
 }
 
 dependencies {
+    implementation(project(":extensions:shared"))
     implementation(libs.hiddenapi)
 }

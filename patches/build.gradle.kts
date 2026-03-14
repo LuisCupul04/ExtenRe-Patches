@@ -10,7 +10,7 @@ patches {
 
 dependencies {
     // Used by JsonGenerator.
-    implementation(project(":patcher"))
+    implementation("com.extenre:extenre-patcher:20.0.1.RE")
     implementation(project(":extensions:shared"))
     implementation(libs.gson)
 }
