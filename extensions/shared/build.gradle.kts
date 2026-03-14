@@ -1,6 +1,7 @@
 import java.lang.Boolean.TRUE
 
 plugins {
+    alias(libs.plugins.android.library)
     alias(libs.plugins.protobuf)
 }
 
@@ -28,6 +29,7 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }

@@ -1,5 +1,9 @@
 import java.lang.Boolean.TRUE
 
+plugins {
+    alias(libs.plugins.android.library)
+}
+
 extension {
     name = "extensions/all/connectivity/wifi/spoof/spoof-wifi.re"
 }
@@ -19,6 +23,7 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }

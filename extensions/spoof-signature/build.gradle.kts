@@ -1,5 +1,9 @@
 import java.lang.Boolean.TRUE
 
+plugins {
+    alias(libs.plugins.android.library)
+}
+
 extension {
     name = "extensions/all/misc/signature/spoof-signature.re"
 }
