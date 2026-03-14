@@ -1,11 +1,5 @@
-import java.lang.Boolean.TRUE
-
 plugins {
-    id("com.android.library")
-}
-
-extension {
-    name = "extensions/all/misc/signature/spoof-signature.re"
+    id("com.android.application")
 }
 
 android {
@@ -13,16 +7,20 @@ android {
     compileSdk = 35
 
     defaultConfig {
+        applicationId = "com.extenre.extension.spoofsignature"
         minSdk = 21
+        multiDexEnabled = true
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = TRUE
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -30,4 +28,6 @@ android {
 
 dependencies {
     implementation(libs.hiddenapi)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+    implementation("androidx.multidex:multidex:2.0.1")
 }
