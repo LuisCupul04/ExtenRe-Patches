@@ -4,11 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
+      # To use Github Actions, change the branch name from `revanced-extended` to `main`
       - master
       - dev
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   release:
@@ -20,39 +18,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-          fetch-depth: 0
 
-      # Cambio a distribución temurin (puede ser microsoft)
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
-          distribution: "temurin"   # o "microsoft"
+          distribution: "zulu"
           java-version: "21"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Cache Gradle
+        uses: burrunan/gradle-cache-action@v3
 
-      # Limpieza profunda de cachés de Gradle
-      - name: Clean compiler caches
-        run: |
-          rm -rf ~/.gradle/caches/
-          rm -rf ~/.gradle/daemon/
-          ./gradlew --stop
-
-      - name: Publish shared module to Maven Local
+      - name: Build
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
-        run: ./gradlew :extensions:shared:publishToMavenLocal
-
-      - name: Build patches
-        env:
-          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
-        run: |
-          ./gradlew clean generatePatchesFiles --no-configuration-cache \
-            -x :extensions:spoof-signature:syncExtension \
-            -x :extensions:spoof-wifi:syncExtension
+        # To update `README.md` and `patches.json`, the command `./gradlew generatePatchesFiles clean` should be used instead of the command `./gradlew build clean`
+        run: ./gradlew generatePatchesFiles clean
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -74,11 +54,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
         run: npm exec semantic-release
-
-      - name: Upload EXRE to Release
-        if: github.ref == 'refs/heads/master'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: patches/build/libs/*.EXRE
-        env:
-          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
