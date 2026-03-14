@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+
 group = "com.extenre"
 
 patches {
@@ -7,8 +9,6 @@ patches {
         license = "GNU General Public License v3.0"
     }
 }
-
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 configurations.runtimeClasspath {
     attributes {
