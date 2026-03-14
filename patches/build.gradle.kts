@@ -1,8 +1,12 @@
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
-import org.gradle.api.attributes.Usage
-import org.gradle.api.attributes.LibraryElements
-import org.gradle.api.attributes.java.TargetJvmVersion
-import org.gradle.api.attributes.Attribute
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.lang.Boolean.TRUE  // si necesitas TRUE
+
+plugins {
+    id("com.android.library")                // <-- Agregar
+    id("org.jetbrains.kotlin.android")        // <-- Agregar (reemplaza a kotlin("jvm"))
+    id("maven-publish")
+    // Elimina kotlin("jvm") si lo tenías
+}
 
 group = "com.extenre"
 
@@ -14,46 +18,52 @@ patches {
     }
 }
 
+android {
+    namespace = "com.extenre.patches"          // Ajusta según tu paquete
+    compileSdk = 35                             // Misma versión que en shared
+    defaultConfig {
+        minSdk = 24                              // Misma que shared
+    }
+    // No necesitas buildTypes si no compilas variantes, pero puedes dejarlo vacío
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+    kotlinOptions {
+        jvmTarget = "21"                          // Equivalente a compilerOptions
+        freeCompilerArgs = listOf("-Xcontext-receivers")
+    }
+}
+
 dependencies {
-    implementation(project(":extensions:shared"))
+    implementation(project(":extensions:shared"))   // Dependencia local
     implementation("com.extenre:extenre-patcher:20.0.1.RE")
     implementation(libs.gson)
 }
 
 tasks {
     jar {
-        // ⬇️ ESTA ES LA ÚNICA LÍNEA QUE DEBES AÑADIR (o modificar si ya existe)
         archiveExtension.set("EXRE")
         exclude("com/extenre/generator")
     }
     register<JavaExec>("generatePatchesFiles") {
         description = "Generate patches files"
-
         dependsOn(build)
-
         classpath = sourceSets["main"].runtimeClasspath
         mainClass.set("com.extenre.generator.MainKt")
     }
-    // Used by gradle-semantic-release-plugin.
     publish {
         dependsOn("generatePatchesFiles")
     }
 }
 
-kotlin {
-    compilerOptions {
-        freeCompilerArgs = listOf("-Xcontext-receivers")
-    }
-}
+// El bloque kotlin { compilerOptions } se reemplaza por android.kotlinOptions
+// Por tanto, elimina el bloque kotlin que tenías abajo.
 
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            from(components["java"])  // Publica el JAR principal
-
-            // Opcional: incluir fuentes y javadoc si los generas
-            // artifact(tasks["sourcesJar"])   // si tienes una tarea sourcesJar
-            // artifact(tasks["javadocJar"])   // si tienes javadocJar
+            from(components["release"])           // Publica la variante release
         }
     }
     repositories {
