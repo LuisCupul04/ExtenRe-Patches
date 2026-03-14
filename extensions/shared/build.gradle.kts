@@ -15,6 +15,7 @@ android {
 
     defaultConfig {
         minSdk = 24
+        multiDexEnabled = true   // <-- Agrega esta línea
     }
 
     buildTypes {
