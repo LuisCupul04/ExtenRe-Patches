@@ -2,7 +2,10 @@ pluginManagement {
     resolutionStrategy {
         eachPlugin {
             if (requested.id.id == "com.android.library") {
-                useVersion("8.14.0")   // Fuerza AGP 8.14.0
+                useVersion("8.14.0")
+            }
+            if (requested.id.id == "org.jetbrains.kotlin.android") {
+                useVersion("2.0.0")   // Fuerza la versión que necesitas
             }
         }
     }
