@@ -1,4 +1,6 @@
-import java.lang.Boolean.TRUE
+plugins {
+    alias(libs.plugins.android.library)   // ← Agregado
+}
 
 extension {
     name = "extensions/all/misc/signature/spoof-signature.re"
@@ -14,7 +16,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = TRUE
+            isMinifyEnabled = true   // ← Cambiado de TRUE a true
         }
     }
 

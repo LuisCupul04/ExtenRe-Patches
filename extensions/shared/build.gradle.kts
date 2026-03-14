@@ -1,6 +1,5 @@
-import java.lang.Boolean.TRUE
-
 plugins {
+    alias(libs.plugins.android.library)   // ← Agregado
     alias(libs.plugins.protobuf)
 }
 
@@ -18,11 +17,14 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = TRUE
+            isMinifyEnabled = true   // ← Cambiado de TRUE a true
 
-            // 'libj2v8.so' is already included in the patch.
+            // Si necesitas filtrar ABIs, especifícalos; si no, puedes quitar el bloque ndk
             ndk {
-                abiFilters.add("")
+                abiFilters.add("armeabi-v7a")
+                abiFilters.add("arm64-v8a")
+                abiFilters.add("x86")
+                abiFilters.add("x86_64")
             }
         }
     }
@@ -43,7 +45,6 @@ dependencies {
     implementation(libs.okhttp3)
     implementation(libs.protobuf.javalite)
 
-    //noinspection UseTomlInstead
     implementation("com.github.ynab:J2V8:6.2.1-16kb.2@aar")
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
