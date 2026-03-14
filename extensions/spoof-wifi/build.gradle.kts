@@ -1,5 +1,7 @@
-plugins {
-    id("com.android.application")
+import java.lang.Boolean.TRUE
+
+extension {
+    name = "extensions/all/connectivity/wifi/spoof/spoof-wifi.re"
 }
 
 android {
@@ -7,20 +9,16 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.extenre.extension.spoofwifi"
         minSdk = 21
-        multiDexEnabled = true
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = TRUE
         }
     }
 
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -29,5 +27,4 @@ android {
 dependencies {
     compileOnly(libs.annotation)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
-    implementation("androidx.multidex:multidex:2.0.1")
 }

@@ -1,6 +1,11 @@
+import java.lang.Boolean.TRUE
+
 plugins {
-    id("com.android.application")
     alias(libs.plugins.protobuf)
+}
+
+extension {
+    name = "extensions/shared.re"
 }
 
 android {
@@ -8,21 +13,21 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.extenre.extension.shared"
         minSdk = 24
-        multiDexEnabled = true
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            // Para evitar advertencias de firma, puedes usar el signingConfig de debug
-            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = TRUE
+
+            // 'libj2v8.so' is already included in the patch.
+            ndk {
+                abiFilters.add("")
+            }
         }
     }
 
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
@@ -43,9 +48,6 @@ dependencies {
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     compileOnly(project(":extensions:shared:stub"))
-
-    // Opcional, pero recomendado para multidex
-    implementation("androidx.multidex:multidex:2.0.1")
 }
 
 protobuf {
