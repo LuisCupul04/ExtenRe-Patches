@@ -8,7 +8,6 @@ on:
       - dev
 
 env:
-  # Elimina la advertencia de Node.js 20 en acciones
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -16,7 +15,7 @@ jobs:
     name: Release
     permissions:
       contents: write
-      packages: write   # Necesario si publicas en GitHub Packages
+      packages: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,23 +24,28 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      # Cambio a distribución temurin (puede ser microsoft)
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
-          distribution: "zulu"
+          distribution: "temurin"   # o "microsoft"
           java-version: "21"
 
-      # Usamos la acción oficial de Gradle (cache automático)
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      ### NUEVO PASO 1: Publicar el módulo shared en Maven Local ###
+      # Limpieza profunda de cachés de Gradle
+      - name: Clean compiler caches
+        run: |
+          rm -rf ~/.gradle/caches/
+          rm -rf ~/.gradle/daemon/
+          ./gradlew --stop
+
       - name: Publish shared module to Maven Local
         env:
-          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}  # Necesario para resolver dependencias de GitHub Packages
+          GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
         run: ./gradlew :extensions:shared:publishToMavenLocal
 
-      ### NUEVO PASO 2: Generar los parches (ahora con shared disponible localmente) ###
       - name: Build patches
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
@@ -49,13 +53,6 @@ jobs:
           ./gradlew clean generatePatchesFiles --no-configuration-cache \
             -x :extensions:spoof-signature:syncExtension \
             -x :extensions:spoof-wifi:syncExtension
-
-      # Opcional: Publicar en GitHub Packages (solo en master)
-      # - name: Publish to GitHub Packages
-      #   if: github.ref == 'refs/heads/master'
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
-      #   run: ./gradlew publish
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -78,7 +75,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
         run: npm exec semantic-release
 
-      # Subir el archivo .EXRE a la release (solo en master)
       - name: Upload EXRE to Release
         if: github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
