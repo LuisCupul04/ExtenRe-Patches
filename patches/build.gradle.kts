@@ -11,7 +11,7 @@ patches {
 dependencies {
     // Used by JsonGenerator.
     implementation(libs.gson)
-    implementation(libs.extenre.patcher.re)   // cada guión se convierte en punto
+    implementation(libs["extenre-patcher-re"])
 }
 
 tasks {
