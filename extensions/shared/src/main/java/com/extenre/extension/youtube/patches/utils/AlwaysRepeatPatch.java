@@ -1,0 +1,37 @@
+/*
+ * Copyright (C) 2022 ReVanced LLC
+ * Copyright (C) 2022 inotia00
+ * Copyright (C) 2026 LuisCupul04
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
+
+package com.extenre.extension.youtube.patches.utils;
+
+import static com.extenre.extension.youtube.utils.VideoUtils.pauseMedia;
+
+import com.extenre.extension.shared.utils.Utils;
+import com.extenre.extension.youtube.settings.Settings;
+import com.extenre.extension.youtube.shared.VideoInformation;
+
+@SuppressWarnings("unused")
+public class AlwaysRepeatPatch extends Utils {
+
+    /**
+     * Injection point.
+     *
+     * @return video is repeated.
+     */
+    public static boolean alwaysRepeat() {
+        return alwaysRepeatEnabled() && VideoInformation.overrideVideoTime(0);
+    }
+
+    public static boolean alwaysRepeatEnabled() {
+        final boolean alwaysRepeat = Settings.ALWAYS_REPEAT.get();
+        final boolean alwaysRepeatPause = Settings.ALWAYS_REPEAT_PAUSE.get();
+
+        if (alwaysRepeat && alwaysRepeatPause) pauseMedia();
+        return alwaysRepeat;
+    }
+
+}

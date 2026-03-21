@@ -1,0 +1,60 @@
+{
+  "branches": [
+    "master",
+    {
+      "name": "dev",
+      "prerelease": true
+    }
+  ],
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "releaseRules": [
+          { "type": "build", "scope": "Needs bump", "release": "patch" }
+        ]
+      }
+    ],
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    [
+      "gradle-semantic-release-plugin",
+      {
+        "gradlePublish": true,
+        "gradlePublishTask": ":patches:publish",
+        "assets": [
+          { "path": "patches-exre.json", "label": "Patches JSON" },
+          { "path": "patches/build/libs/*.EXRE", "label": "Patches bundle" }
+        ]
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "README.md",
+          "CHANGELOG.md",
+          "gradle.properties",
+          "patches-exre.json"
+        ],
+        "message": "chore: Release v${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          { "path": "patches-exre.json", "label": "Patches JSON" },
+          { "path": "patches/build/libs/*.EXRE", "label": "Patches bundle" }
+        ]
+      }
+    ],
+    [
+      "@saithodev/semantic-release-backmerge",
+      {
+        "backmergeBranches": [{ "from": "master", "to": "dev" }],
+        "clearWorkspace": true
+      }
+    ]
+  ]
+}
