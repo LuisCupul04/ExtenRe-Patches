@@ -28,12 +28,20 @@ pluginManagement {
                 username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
                 password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
             }
-        }
+        }        
+        maven {
+            name = "GitHubPackages3"
+            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patches-gradle-plugin")
+            credentials {
+                username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
+                password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
+            }
+        } 
     }
 }
 
 plugins {
-    id("com.extenre.patches") version "1.0.5.dev-RE"
+    id("com.extenre.patches") version "1.0.8.dev-RE"
 }
 
 rootProject.name = "extenre-patches"

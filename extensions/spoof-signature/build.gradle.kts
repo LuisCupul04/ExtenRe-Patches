@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.library)   // ← Agregado
+    id("com.android.application")
 }
 
 extension {
