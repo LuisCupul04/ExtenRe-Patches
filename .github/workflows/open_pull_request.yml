@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  MESSAGE: Merge branch `${{ github.head_ref || github.ref_name }}` to `main`
+  MESSAGE: Merge branch `${{ github.head_ref || github.ref_name }}` to `master`
 
 jobs:
   pull-request:
@@ -16,13 +16,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # ← IMPORTANTE: así descargas todas las ramas
 
       - name: Open pull request
         uses: repo-sync/pull-request@v2
         with:
-          destination_branch: main
+          destination_branch: master
           pr_title: 'chore: ${{ env.MESSAGE }}'
           pr_body: |
             This pull request will ${{ env.MESSAGE }}.
-
           pr_draft: true
