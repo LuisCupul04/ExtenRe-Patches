@@ -16,7 +16,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # O usa EXTEN_TOKEN si tiene read:packages
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # 🔑 Configurar las propiedades de Gradle antes de ejecutar la acción
       - name: Setup Gradle properties for GitHub Packages
