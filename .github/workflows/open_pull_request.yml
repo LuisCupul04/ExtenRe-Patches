@@ -13,11 +13,14 @@ jobs:
   pull-request:
     name: Open pull request
     runs-on: ubuntu-latest
+    permissions:                      # ← AÑADE ESTO
+      contents: write                 # Necesario para crear la referencia del PR
+      pull-requests: write            # Necesario para crear el PR
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0   # ← IMPORTANTE: así descargas todas las ramas
+          fetch-depth: 0
 
       - name: Open pull request
         uses: repo-sync/pull-request@v2
@@ -27,3 +30,4 @@ jobs:
           pr_body: |
             This pull request will ${{ env.MESSAGE }}.
           pr_draft: true
+          github_token: ${{ secrets.EXTEN_TOKEN }}   # Opcional, pero explícito
