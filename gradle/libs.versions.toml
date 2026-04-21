@@ -21,9 +21,12 @@ kotlin = "2.0.0"
 morphe-patcher = { module = "app.morphe:morphe-patcher", version.ref = "morphe-patcher" }
 smali = { module = "app.morphe:smali", version.ref = "smali" }
 
-annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }    
+annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }  
 anotación = { módulo = "androidx.annotation:annotation" , version.ref = "annotation" }
-anotación = { módulo = "androidx.annotation:annotation" , version.ref = "annotation" }
+# Elimina estas dos líneas problemáticas:
+# anotación = { módulo = "androidx.annotation:annotation" , version.ref = "annotation" }
+# anotación = { módulo = "androidx.annotation:annotation" , version.ref = "annotation" }
+
 collections4 = { module = "org.apache.commons:commons-collections4", version.ref = "collections4" }
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
@@ -36,5 +39,5 @@ protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protoc
 
 [plugins]
 kotlin-android = { id = "org.jetbrains.kotlin.android" }
-android-application = { id = "com.android.application" }  #// ← sin version.ref
+android-application = { id = "com.android.application" }
 protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }
