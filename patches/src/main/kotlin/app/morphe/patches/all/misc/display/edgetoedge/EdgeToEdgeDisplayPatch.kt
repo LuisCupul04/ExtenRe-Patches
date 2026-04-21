@@ -18,12 +18,13 @@ val edgeToEdgeDisplayPatch = resourcePatch(
     name = "Disable edge-to-edge display",
     description = "Disable forced edge-to-edge display on Android 15+ by changing the app's target SDK version. " +
             "This patch does not work if the app is installed by mounting.",
-    use = false,
+    defaultEnable = false,   // ← Cambiado de 'use = false'
 ) {
     execute {
         document("AndroidManifest.xml").use { document ->
             // Ideally, the patch should only be applied when targetSdkVersion is 35 or greater.
-            // Since ApkTool does not add targetSdkVersion to AndroidManifest, there is no way to check targetSdkVersion.
+            // Since ApkTool does not add targetSdkVersion to AndroidManifest, there is no way to check targetSdkVersion.  
+// Dado que ApkTool no agrega targetSdkVersion a AndroidManifest, no hay forma de comprobar targetSdkVersion.
             // Instead, it checks compileSdkVersion and prints a warning.
             try {
                 val manifestElement = document.getNode("manifest") as Element
