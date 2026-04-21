@@ -30,7 +30,7 @@ fun sharedExtensionPatch(
 ) = bytecodePatch(
     description = "sharedExtensionPatch"
 ) {
-    extendWith("extensions/shared.rve")
+    extendWith("extensions/shared.re")
 
     execute {
         if (classes.none { EXTENSION_UTILS_CLASS_DESCRIPTOR == it.type }) {
