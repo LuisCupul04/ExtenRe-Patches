@@ -8,7 +8,8 @@ patches {
         source = "git@github.com:luiscupul04/extenre-patches.git"
         author = "LuisCupul04 (Luis Cupul 04)"
         license = "GNU General Public License v3.0"
-        contact = "LuisCupul04@outlook.com"   // ← Agrega esta línea (cambia el email si lo deseas)
+        contact = "LuisCupul04@outlook.com"   // ← Ya lo agregaste
+        website = "https://github.com/LuisCupul04/ExtenRe-patches"   // ← Agrega esta línea
     }
 }
 
