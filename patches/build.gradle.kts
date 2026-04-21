@@ -1,10 +1,12 @@
-group = "com.extenre"
+group = "app.morphe"
 version = rootProject.properties["version"] as? String ?: "0.0.0"
 
 patches {
     about {
         name = "ExtenRe Patches"
-        author = "LuisCupul04"
+        description = "Patches for ExtenRe"
+        source = "git@github.com:luiscupul04/extenre-patches.git"
+        author = "LuisCupul04 (Luis Cupul 04)"
         license = "GNU General Public License v3.0"
     }
 }
@@ -17,15 +19,15 @@ dependencies {
 tasks {
     // Bundle de parches (extensión .EXRE)
     jar {
-        archiveExtension.set("EXRE")
-        exclude("com/extenre/generator")
+        archiveExtension.set("mpp")
+        exclude("app/morphe/generator")
     }
 
     // JAR estándar para publicación como biblioteca
     register<Jar>("libraryJar") {
         archiveClassifier.set("")
         from(sourceSets.main.get().output)
-        exclude("com/extenre/generator")
+        exclude("app/morphe/generator")
     }
 
     // Genera patches-exre.json y actualiza README
@@ -33,7 +35,7 @@ tasks {
         description = "Generate patches files"
         dependsOn(build)
         classpath = sourceSets["main"].runtimeClasspath
-        mainClass.set("com.extenre.generator.MainKt")
+        mainClass.set("app.morphe.generator.MainKt")
     }
 
     // Configurar la tarea sourcesJar existente

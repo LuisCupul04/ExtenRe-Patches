@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.extenre.extension"
+    namespace = "app.morphe.extension"
     compileSdk = 35
 
     defaultConfig {

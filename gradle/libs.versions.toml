@@ -1,8 +1,8 @@
 [versions]
-extenre-patcher = "20.0.0.dev-17-RE"
+morphe-patcher = "1.3.3"
 # Tracking https://github.com/google/smali/issues/64.
 #noinspection GradleDependency
-smali = "3.0.9.RE"
+smali = "b6365a84f4"
 gson = "2.13.2"
 agp = "8.14.0"
 annotation = "1.9.1"
@@ -18,8 +18,8 @@ preference = "1.2.1"
 kotlin = "2.0.0" 
 
 [libraries]
-extenre-patcher = { module = "com.extenre:extenre-patcher", version.ref = "extenre-patcher" }
-smali = { module = "com.extenre:smali", version.ref = "smali" }
+extenre-patcher = { module = "app.morphe:extenre-patcher", version.ref = "extenre-patcher" }
+smali = { module = "app.morphe:smali", version.ref = "smali" }
 
 annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 collections4 = { module = "org.apache.commons:commons-collections4", version.ref = "collections4" }

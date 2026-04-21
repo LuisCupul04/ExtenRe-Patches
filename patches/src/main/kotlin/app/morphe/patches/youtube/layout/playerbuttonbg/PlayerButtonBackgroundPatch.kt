@@ -1,0 +1,43 @@
+/*
+ * Copyright (C) 2022 ReVanced LLC
+ * Copyright (C) 2022 inotia00
+ * Copyright (C) 2026 LuisCupul04
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
+
+package app.morphe.patches.youtube.layout.playerbuttonbg
+
+import app.morphe.patcher.patch.resourcePatch
+import app.morphe.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACKAGE
+import app.morphe.patches.youtube.utils.patch.PatchList.FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND
+import app.morphe.patches.youtube.utils.settings.ResourceUtils.addPreference
+import app.morphe.patches.youtube.utils.settings.settingsPatch
+import app.morphe.util.doRecursively
+import org.w3c.dom.Element
+
+@Suppress("unused")
+val playerButtonBackgroundPatch = resourcePatch(
+    name = FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND.key,
+    description = "${FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND.title}: ${FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND.summary}",
+) {
+    compatibleWith(COMPATIBLE_PACKAGE)
+
+    dependsOn(settingsPatch)
+
+    execute {
+        document("res/drawable/player_button_circle_background.xml").use { document ->
+
+            document.doRecursively node@{ node ->
+                if (node !is Element) return@node
+
+                node.getAttributeNode("android:color")?.let { attribute ->
+                    attribute.textContent = "@android:color/transparent"
+                }
+            }
+        }
+
+        addPreference(FORCE_HIDE_PLAYER_BUTTONS_BACKGROUND)
+
+    }
+}

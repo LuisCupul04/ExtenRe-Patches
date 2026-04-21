@@ -3,11 +3,11 @@ plugins {
 }
 
 extension {
-    name = "extensions/all/connectivity/wifi/spoof/spoof-wifi.re"
+    name = "extensions/all/connectivity/wifi/spoof/spoof-wifi.mpe"
 }
 
 android {
-    namespace = "com.extenre.extension"
+    namespace = "app.morphe.extension"
     compileSdk = 35
 
     defaultConfig {

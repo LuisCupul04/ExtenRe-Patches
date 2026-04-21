@@ -15,33 +15,42 @@ pluginManagement {
         // tus repositorios con credenciales
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patcher")
+            url = uri("https://maven.pkg.github.com/MorpheApp/registry")
             credentials {
                 username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
                 password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
             }
         }
-        maven {
-            name = "GitHubPackages2"
-            url = uri("https://maven.pkg.github.com/LuisCupul04/smali-RE")
-            credentials {
-                username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
-                password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
-            }
-        }        
-        maven {
-            name = "GitHubPackages3"
-            url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patches-gradle-plugin")
-            credentials {
-                username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
-                password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
-            }
-        } 
+        //maven {
+            //name = "GitHubPackages2"
+            //url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patcher")
+            //credentials {
+                //username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
+                //password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
+            //}
+        //}
+        //maven {
+            //name = "GitHubPackages3"
+            //url = uri("https://maven.pkg.github.com/LuisCupul04/smali-RE")
+            //credentials {
+                //username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
+                //password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
+            //}
+        //}        
+        //maven {
+            //name = "GitHubPackages4"
+            //url = uri("https://maven.pkg.github.com/LuisCupul04/ExtenRe-patches-gradle-plugin")
+            //credentials {
+                //username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR"))
+                //password = providers.gradleProperty("gpr.key").getOrElse(System.getenv("GITHUB_TOKEN"))
+            //}
+        //} 
     }
 }
 
 plugins {
-    id("com.extenre.patches") version "1.0.8.dev-RE"
+    //id("com.extenre.patches") version "1.0.8.dev-RE"
+    id("app.morphe.patches") version "1.3.2"
 }
 
 rootProject.name = "extenre-patches"

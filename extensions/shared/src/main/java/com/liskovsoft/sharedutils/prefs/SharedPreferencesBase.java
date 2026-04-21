@@ -14,8 +14,8 @@ import android.content.SharedPreferences;
 
 import java.io.File;
 
-import com.extenre.extension.shared.utils.Logger;
-import com.extenre.extension.shared.utils.Utils;
+import app.morphe.extension.shared.utils.Logger;
+import app.morphe.extension.shared.utils.Utils;
 
 public class SharedPreferencesBase {
     private static final long PREF_MAX_SIZE_MB = 5;

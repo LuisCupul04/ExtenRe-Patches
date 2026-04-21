@@ -3,11 +3,11 @@ plugins {
 }
 
 extension {
-    name = "extensions/all/misc/signature/spoof-signature.re"
+    name = "extensions/all/misc/signature/spoof-signature.mpe"
 }
 
 android {
-    namespace = "com.extenre.extension"
+    namespace = "app.morphe.extension"
     compileSdk = 35
 
     defaultConfig {

@@ -31,7 +31,7 @@ import static com.dragons.aurora.playstoreapiv2.PackageNameUtil.getGmsCorePackag
 
 import android.content.pm.PackageInfo;
 
-import com.extenre.extension.shared.utils.PackageUtils;
+import app.morphe.extension.shared.utils.PackageUtils;
 
 public class NativeGsfVersionProvider {
 
