@@ -48,6 +48,7 @@ import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -117,7 +118,8 @@ val actionBarComponentsPatch = bytecodePatch(
             val actionBarComponentMatch = actionBarComponentFingerprint.matchOrThrow()
             val actionBarComponentMethod = actionBarComponentMatch.method
             val actionBarComponentClassDef = actionBarComponentMatch.classDef
-            val actionBarComponentMutableMethod = proxy(actionBarComponentClassDef).mutableClass.methods.first {
+            // ✅ Morphe: obtener clase mutable sin proxy
+            val actionBarComponentMutableMethod = mutableClassDefBy(actionBarComponentClassDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, actionBarComponentMethod)
             }
 
@@ -187,11 +189,14 @@ val actionBarComponentsPatch = bytecodePatch(
                 removeInstruction(spannedIndex)
 
                 // set action button identifier
-                val buttonTypeDownloadIndex = actionBarComponentMatch.patternMatch!!.startIndex + 1
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val startIndex = actionBarComponentMatch.instructionMatches.first().index
+                val endIndex = actionBarComponentMatch.instructionMatches.last().index
+                val buttonTypeDownloadIndex = startIndex + 1
                 val buttonTypeDownloadRegister =
                     getInstruction<OneRegisterInstruction>(buttonTypeDownloadIndex).registerA
 
-                val buttonTypeIndex = actionBarComponentMatch.patternMatch!!.endIndex - 1
+                val buttonTypeIndex = endIndex - 1
                 val buttonTypeRegister =
                     getInstruction<OneRegisterInstruction>(buttonTypeIndex).registerA
 
