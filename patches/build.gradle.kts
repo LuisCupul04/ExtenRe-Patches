@@ -13,7 +13,7 @@ patches {
 
 dependencies {
     implementation(libs.gson)
-    implementation(libs.extenre.patcher)
+    implementation(libs.morphe.patcher)
 }
 
 tasks {
