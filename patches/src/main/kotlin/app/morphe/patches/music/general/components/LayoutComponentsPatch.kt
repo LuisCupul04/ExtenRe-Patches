@@ -46,6 +46,7 @@ import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.fingerprint.mutableClassOrThrow
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -109,11 +110,13 @@ val layoutComponentsPatch = bytecodePatch(
         val chipCloudMatch = chipCloudFingerprint.matchOrThrow()
         val chipCloudMethod = chipCloudMatch.method
         val chipCloudClassDef = chipCloudMatch.classDef
-        val chipCloudMutableMethod = proxy(chipCloudClassDef).mutableClass.methods.first {
+        // ✅ Morphe: mutableClassDefBy directo
+        val chipCloudMutableMethod = mutableClassDefBy(chipCloudClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, chipCloudMethod)
         }
         chipCloudMutableMethod.apply {
-            val targetIndex = chipCloudMatch.patternMatch!!.endIndex
+            // ✅ Morphe: instructionMatches en lugar de patternMatch
+            val targetIndex = chipCloudMatch.instructionMatches.last().index
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
             addInstruction(
@@ -148,11 +151,13 @@ val layoutComponentsPatch = bytecodePatch(
             val historyMatch = fingerprint.matchOrThrow()
             val historyMethod = historyMatch.method
             val historyClassDef = historyMatch.classDef
-            val historyMutableMethod = proxy(historyClassDef).mutableClass.methods.first {
+            // ✅ Morphe: mutableClassDefBy directo
+            val historyMutableMethod = mutableClassDefBy(historyClassDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, historyMethod)
             }
             historyMutableMethod.apply {
-                val insertIndex = historyMatch.patternMatch!!.startIndex
+                // ✅ Morphe: instructionMatches en lugar de patternMatch
+                val insertIndex = historyMatch.instructionMatches.first().index
                 val insertRegister =
                     getInstruction<FiveRegisterInstruction>(insertIndex).registerD
 
@@ -203,11 +208,13 @@ val layoutComponentsPatch = bytecodePatch(
             val parentToolMatch = parentToolMenuFingerprint.matchOrThrow()
             val parentToolMethod = parentToolMatch.method
             val parentToolClassDef = parentToolMatch.classDef
-            val parentToolMutableMethod = proxy(parentToolClassDef).mutableClass.methods.first {
+            // ✅ Morphe: mutableClassDefBy directo
+            val parentToolMutableMethod = mutableClassDefBy(parentToolClassDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, parentToolMethod)
             }
             parentToolMutableMethod.apply {
-                val index = parentToolMatch.patternMatch!!.startIndex + 1
+                // ✅ Morphe: instructionMatches en lugar de patternMatch
+                val index = parentToolMatch.instructionMatches.first().index + 1
                 val register = getInstruction<FiveRegisterInstruction>(index).registerD
 
                 addInstructions(
@@ -300,11 +307,13 @@ val layoutComponentsPatch = bytecodePatch(
         val tasteBuilderMatch = tasteBuilderSyntheticFingerprint.matchOrThrow(tasteBuilderConstructorFingerprint)
         val tasteBuilderMethod = tasteBuilderMatch.method
         val tasteBuilderClassDef = tasteBuilderMatch.classDef
-        val tasteBuilderMutableMethod = proxy(tasteBuilderClassDef).mutableClass.methods.first {
+        // ✅ Morphe: mutableClassDefBy directo
+        val tasteBuilderMutableMethod = mutableClassDefBy(tasteBuilderClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, tasteBuilderMethod)
         }
         tasteBuilderMutableMethod.apply {
-            val insertIndex = tasteBuilderMatch.patternMatch!!.startIndex
+            // ✅ Morphe: instructionMatches en lugar de patternMatch
+            val insertIndex = tasteBuilderMatch.instructionMatches.first().index
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
             addInstruction(
