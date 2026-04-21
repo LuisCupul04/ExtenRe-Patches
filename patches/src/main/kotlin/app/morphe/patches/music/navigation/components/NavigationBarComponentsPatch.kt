@@ -41,6 +41,7 @@ import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.replaceLiteralInstructionCall
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
@@ -132,7 +133,8 @@ val navigationBarComponentsPatch = bytecodePatch(
         val tabLayoutMatch = tabLayoutTextFingerprint.matchOrThrow()
         val tabLayoutMethod = tabLayoutMatch.method
         val tabLayoutClassDef = tabLayoutMatch.classDef
-        val tabLayoutMutableMethod = proxy(tabLayoutClassDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val tabLayoutMutableMethod = mutableClassDefBy(tabLayoutClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, tabLayoutMethod)
         }
         tabLayoutMutableMethod.apply {
@@ -149,7 +151,8 @@ val navigationBarComponentsPatch = bytecodePatch(
             val browseIdFieldName =
                 (getInstruction<ReferenceInstruction>(browseIdIndex).reference as FieldReference).name
 
-            val enumIndex = tabLayoutMatch.patternMatch!!.startIndex + 3
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val enumIndex = tabLayoutMatch.instructionMatches.first().index + 3
             val enumRegister = getInstruction<OneRegisterInstruction>(enumIndex).registerA
             val insertEnumIndex = indexOfFirstInstructionOrThrow(Opcode.AND_INT_LIT8) - 2
 
