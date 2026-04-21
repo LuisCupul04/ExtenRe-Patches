@@ -12,6 +12,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.PatchException
+import app.morphe.patcher.util.mutableTypes.MutableMethod  // ✅ Cambio: importación corregida
 import app.morphe.patches.music.navigation.components.navigationBarComponentsPatch
 import app.morphe.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import app.morphe.patches.music.utils.extension.Constants.ADS_PATH
@@ -39,6 +40,7 @@ import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy  // ✅ Asegurar importación
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -140,11 +142,13 @@ val adsPatch = adsPatch(
         val premiumMatch = getPremiumTextViewFingerprint.matchOrThrow()
         val premiumMethod = premiumMatch.method
         val premiumClassDef = premiumMatch.classDef
-        val premiumMutableMethod = mutableClassDefBy(premiumClassDef.type).methods.first {
+        // ✅ Morphe: mutableClassDefBy recibe ClassDef directamente
+        val premiumMutableMethod = mutableClassDefBy(premiumClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, premiumMethod)
         }
         premiumMutableMethod.apply {
-            val insertIndex = premiumMatch.patternMatch!!.startIndex
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val insertIndex = premiumMatch.instructionMatches.first().index
             val register = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
             addInstruction(
@@ -229,8 +233,8 @@ val adsPatch = adsPatch(
     }
 )
 
-// Función auxiliar para encontrar la instrucción setContentView
-private fun indexOfSetContentViewInstruction(method: app.morphe.patcher.util.proxy.mutableTypes.MutableMethod): Int {
+// ✅ Morphe: función auxiliar con tipo corregido
+private fun indexOfSetContentViewInstruction(method: MutableMethod): Int {
     return method.indexOfFirstInstructionOrThrow {
         opcode == Opcode.INVOKE_VIRTUAL &&
                 getReference<MethodReference>()?.name == "setContentView"
