@@ -45,6 +45,7 @@ import app.morphe.util.getReference
 import app.morphe.util.getWalkerMethod
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -123,9 +124,10 @@ val flyoutMenuComponentsPatch = bytecodePatch(
                 val method = findMethodOrThrow(onCheckedChangedListenerDefiningClass) {
                     name == "onCheckedChanged"
                 }
-                val classDef = classes.find { it.type == onCheckedChangedListenerDefiningClass }
+                val classDef = classDefs.find { it.type == onCheckedChangedListenerDefiningClass }
                     ?: throw PatchException("Class not found: $onCheckedChangedListenerDefiningClass")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+                val mutableMethod = mutableClassDefBy(classDef).methods.first {
                     MethodUtil.methodSignaturesMatch(it, method)
                 }
 
@@ -163,11 +165,13 @@ val flyoutMenuComponentsPatch = bytecodePatch(
         val screenWidthMatch = screenWidthFingerprint.matchOrThrow(screenWidthParentFingerprint)
         val screenWidthMethod = screenWidthMatch.method
         val screenWidthClassDef = screenWidthMatch.classDef
-        val screenWidthMutableMethod = proxy(screenWidthClassDef).mutableClass.methods.first {
+        // ✅ Morphe: mutableClassDefBy directo
+        val screenWidthMutableMethod = mutableClassDefBy(screenWidthClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, screenWidthMethod)
         }
         screenWidthMutableMethod.apply {
-            val index = screenWidthMatch.patternMatch!!.startIndex
+            // ✅ Morphe: instructionMatches en lugar de patternMatch
+            val index = screenWidthMatch.instructionMatches.first().index
             val register = getInstruction<TwoRegisterInstruction>(index).registerA
 
             addInstructions(
@@ -185,13 +189,17 @@ val flyoutMenuComponentsPatch = bytecodePatch(
         val menuItemMatch = menuItemFingerprint.matchOrThrow()
         val menuItemMethod = menuItemMatch.method
         val menuItemClassDef = menuItemMatch.classDef
-        val menuItemMutableMethod = proxy(menuItemClassDef).mutableClass.methods.first {
+        // ✅ Morphe: mutableClassDefBy directo
+        val menuItemMutableMethod = mutableClassDefBy(menuItemClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, menuItemMethod)
         }
         menuItemMutableMethod.apply {
             val freeIndex = indexOfFirstInstructionOrThrow(Opcode.OR_INT_LIT16)
-            val textViewIndex = menuItemMatch.patternMatch!!.startIndex
-            val imageViewIndex = menuItemMatch.patternMatch!!.endIndex
+            // ✅ Morphe: acceder a índices desde instructionMatches
+            val startIndex = menuItemMatch.instructionMatches.first().index
+            val endIndex = menuItemMatch.instructionMatches.last().index
+            val textViewIndex = startIndex
+            val imageViewIndex = endIndex
 
             val freeRegister =
                 getInstruction<TwoRegisterInstruction>(freeIndex).registerA
