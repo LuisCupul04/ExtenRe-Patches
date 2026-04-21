@@ -19,8 +19,8 @@ import app.morphe.patcher.patch.ResourcePatchContext
 import app.morphe.patcher.patch.booleanOption
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.resourcePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableField.Companion.toMutable
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableField.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.music.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import app.morphe.patches.music.utils.extension.Constants.COMPONENTS_PATH
@@ -80,6 +80,7 @@ import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
 import app.morphe.util.indexOfFirstStringInstructionOrThrow
 import app.morphe.util.insertNode
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -298,7 +299,7 @@ val playerComponentsPatch = bytecodePatch(
             val onClickReference = getInstruction<ReferenceInstruction>(onClickIndex).reference
             val onClickReferenceDefiningClass = (onClickReference as MethodReference).definingClass
 
-            // CORREGIDO: obtener la clase mutable directamente
+            // ✅ Morphe: obtener la clase mutable directamente
             val onClickClass = mutableClassDefBy(onClickReferenceDefiningClass)
             val onClickMethod = onClickClass.methods.first { method ->
                 MethodUtil.methodSignaturesMatch(method, onClickReference)
@@ -376,11 +377,13 @@ val playerComponentsPatch = bytecodePatch(
             val nextButtonVisibilityMatch = nextButtonVisibilityFingerprint.matchOrThrow(miniPlayerParentFingerprint)
             val nextButtonVisibilityMethod = nextButtonVisibilityMatch.method
             val nextButtonVisibilityClassDef = nextButtonVisibilityMatch.classDef
-            val nextButtonVisibilityMutableMethod = mutableClassDefBy(nextButtonVisibilityClassDef.type).methods.first {
+            // ✅ Morphe: usar mutableClassDefBy con classDef
+            val nextButtonVisibilityMutableMethod = mutableClassDefBy(nextButtonVisibilityClassDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, nextButtonVisibilityMethod)
             }
             nextButtonVisibilityMutableMethod.apply {
-                val targetIndex = nextButtonVisibilityMatch.patternMatch!!.startIndex + 1
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val targetIndex = nextButtonVisibilityMatch.instructionMatches.first().index + 1
                 val targetRegister =
                     getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
@@ -438,7 +441,8 @@ val playerComponentsPatch = bytecodePatch(
             colorMathPlayerIGetReference
         ) = switchToggleColorFingerprint.matchOrThrow(miniPlayerConstructorFingerprint).let {
             with(it.method) {
-                val relativeIndex = it.patternMatch!!.endIndex + 1
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val relativeIndex = it.instructionMatches.last().index + 1
                 val invokeVirtualIndex =
                     indexOfFirstInstructionOrThrow(relativeIndex, Opcode.INVOKE_VIRTUAL)
                 val iGetIndex = indexOfFirstInstructionOrThrow(relativeIndex, Opcode.IGET)
@@ -625,11 +629,13 @@ val playerComponentsPatch = bytecodePatch(
         val minimizedPlayerMatch = minimizedPlayerFingerprint.matchOrThrow()
         val minimizedPlayerMethod = minimizedPlayerMatch.method
         val minimizedPlayerClassDef = minimizedPlayerMatch.classDef
-        val minimizedPlayerMutableMethod = mutableClassDefBy(minimizedPlayerClassDef.type).methods.first {
+        // ✅ Morphe: mutableClassDefBy directo
+        val minimizedPlayerMutableMethod = mutableClassDefBy(minimizedPlayerClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, minimizedPlayerMethod)
         }
         minimizedPlayerMutableMethod.apply {
-            val insertIndex = minimizedPlayerMatch.patternMatch!!.endIndex
+            // ✅ Morphe: instructionMatches en lugar de patternMatch
+            val insertIndex = minimizedPlayerMatch.instructionMatches.last().index
             val insertRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
             addInstructions(
@@ -762,8 +768,9 @@ val playerComponentsPatch = bytecodePatch(
                     getSwipeToDismissReference(Opcode.INVOKE_INTERFACE, false)
 
                 handleSignInEventFingerprint.matchOrThrow(handleSearchRenderedFingerprint).let {
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
                     val dismissBehaviorMethod =
-                        it.getWalkerMethod(it.patternMatch!!.startIndex)
+                        it.getWalkerMethod(it.instructionMatches.first().index)
 
                     dismissBehaviorMethod.apply {
                         val insertIndex = indexOfFirstInstructionOrThrow {
@@ -806,11 +813,13 @@ val playerComponentsPatch = bytecodePatch(
                 val miniPlayerDefaultTextMatch = miniPlayerDefaultTextFingerprint.matchOrThrow()
                 val miniPlayerDefaultTextMethod = miniPlayerDefaultTextMatch.method
                 val miniPlayerDefaultTextClassDef = miniPlayerDefaultTextMatch.classDef
-                val miniPlayerDefaultTextMutableMethod = mutableClassDefBy(miniPlayerDefaultTextClassDef.type).methods.first {
+                // ✅ Morphe: mutableClassDefBy directo
+                val miniPlayerDefaultTextMutableMethod = mutableClassDefBy(miniPlayerDefaultTextClassDef).methods.first {
                     MethodUtil.methodSignaturesMatch(it, miniPlayerDefaultTextMethod)
                 }
                 miniPlayerDefaultTextMutableMethod.apply {
-                    val insertIndex = miniPlayerDefaultTextMatch.patternMatch!!.endIndex
+                    // ✅ Morphe: instructionMatches en lugar de patternMatch
+                    val insertIndex = miniPlayerDefaultTextMatch.instructionMatches.last().index
                     val insertRegister =
                         getInstruction<TwoRegisterInstruction>(insertIndex).registerB
 
@@ -895,15 +904,17 @@ val playerComponentsPatch = bytecodePatch(
             val zenMatch = it
             val zenMethod = zenMatch.method
             val zenClassDef = zenMatch.classDef
-            val zenMutableMethod = mutableClassDefBy(zenClassDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy directo
+            val zenMutableMethod = mutableClassDefBy(zenClassDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, zenMethod)
             }
             zenMutableMethod.apply {
-                val startIndex = zenMatch.patternMatch!!.startIndex
+                // ✅ Morphe: instructionMatches en lugar de patternMatch
+                val startIndex = zenMatch.instructionMatches.first().index
                 val targetRegister =
                     getInstruction<OneRegisterInstruction>(startIndex).registerA
 
-                val insertIndex = zenMatch.patternMatch!!.endIndex + 1
+                val insertIndex = zenMatch.instructionMatches.last().index + 1
 
                 addInstructions(
                     insertIndex, """
@@ -995,11 +1006,13 @@ val playerComponentsPatch = bytecodePatch(
         val remixGenericButtonMatch = remixGenericButtonFingerprint.matchOrThrow()
         val remixGenericButtonMethod = remixGenericButtonMatch.method
         val remixGenericButtonClassDef = remixGenericButtonMatch.classDef
-        val remixGenericButtonMutableMethod = mutableClassDefBy(remixGenericButtonClassDef.type).methods.first {
+        // ✅ Morphe: mutableClassDefBy directo
+        val remixGenericButtonMutableMethod = mutableClassDefBy(remixGenericButtonClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, remixGenericButtonMethod)
         }
         remixGenericButtonMutableMethod.apply {
-            val targetIndex = remixGenericButtonMatch.patternMatch!!.endIndex
+            // ✅ Morphe: instructionMatches en lugar de patternMatch
+            val targetIndex = remixGenericButtonMatch.instructionMatches.last().index
             val targetRegister = getInstruction<TwoRegisterInstruction>(targetIndex).registerA
 
             addInstructions(
@@ -1061,7 +1074,8 @@ val playerComponentsPatch = bytecodePatch(
 
         val (repeatTrackMethod, repeatTrackIndex) = repeatTrackFingerprint.matchOrThrow().let {
             with(it.method) {
-                val targetIndex = it.patternMatch!!.endIndex
+                // ✅ Morphe: instructionMatches en lugar de patternMatch
+                val targetIndex = it.instructionMatches.last().index
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
                 addInstructions(
@@ -1255,11 +1269,13 @@ val playerComponentsPatch = bytecodePatch(
             val engagementPanelHeightMatch = engagementPanelHeightFingerprint.matchOrThrow(engagementPanelHeightParentFingerprint)
             val engagementPanelHeightMethod = engagementPanelHeightMatch.method
             val engagementPanelHeightClassDef = engagementPanelHeightMatch.classDef
-            val engagementPanelHeightMutableMethod = mutableClassDefBy(engagementPanelHeightClassDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy directo
+            val engagementPanelHeightMutableMethod = mutableClassDefBy(engagementPanelHeightClassDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, engagementPanelHeightMethod)
             }
             engagementPanelHeightMutableMethod.apply {
-                val targetIndex = engagementPanelHeightMatch.patternMatch!!.endIndex
+                // ✅ Morphe: instructionMatches en lugar de patternMatch
+                val targetIndex = engagementPanelHeightMatch.instructionMatches.last().index
                 val targetRegister =
                     getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
