@@ -24,11 +24,12 @@ smali = { module = "app.morphe:smali", version.ref = "smali" }
 annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 collections4 = { module = "org.apache.commons:commons-collections4", version.ref = "collections4" }
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }  
+gson = { module = "com.google.code.gson:gson" , version.ref = "gson" }
 hiddenapi = { module = "org.lsposed.hiddenapibypass:hiddenapibypass" , version.ref = "hiddenapi" }
 lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "lang3" }
 okhttp3 = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp3" }
-preferencia = { módulo = "androidx.preference:preference" , version.ref = "preference" }
+preference = { module = "androidx.preference:preference", version.ref = "preference" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protoc" }
 
 [plugins]
