@@ -15,7 +15,7 @@ import app.morphe.patcher.patch.stringOption
 val spoofSignaturePatch = bytecodePatch(
     name = "Spoof signature",
     description = "Spoofs the signature of the app.",
-    use = false,
+    defaultEnable = false,
 ) {
     val packageName by stringOption(
         key = "packageName",
