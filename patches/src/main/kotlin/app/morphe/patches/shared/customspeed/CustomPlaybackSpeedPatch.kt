@@ -18,6 +18,7 @@ import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
@@ -41,11 +42,13 @@ fun customPlaybackSpeedPatch(
         val arrayGeneratorMatch = arrayGeneratorFingerprint.matchOrThrow()
         val method = arrayGeneratorMatch.method
         val classDef = arrayGeneratorMatch.classDef
-        val mutableMethod = proxy(classDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, method)
         }
         mutableMethod.apply {
-            val targetIndex = arrayGeneratorMatch.patternMatch!!.startIndex
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val targetIndex = arrayGeneratorMatch.instructionMatches.first().index
             val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
             addInstructions(
