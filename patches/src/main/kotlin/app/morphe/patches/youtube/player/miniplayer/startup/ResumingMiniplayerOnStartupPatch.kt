@@ -36,7 +36,8 @@ val resumingMiniplayerOnStartupPatch = bytecodePatch(
 
         showMiniplayerCommandFingerprint.matchOrThrow().let {
             it.method.apply {
-                val insertIndex = it.patternMatch!!.endIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val insertIndex = it.instructionMatches.last().index
                 val insertRegister =
                     getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
