@@ -14,7 +14,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.resourcePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.shared.extension.Constants.PATCHES_PATH
 import app.morphe.patches.shared.mapping.ResourceType.ID
 import app.morphe.patches.shared.mapping.getResourceId
@@ -29,6 +29,7 @@ import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.injectLiteralInstructionViewCall
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.builder.MutableMethodImplementation
@@ -176,20 +177,20 @@ val commentsPanelPatch = bytecodePatch(
                 )
         }
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
-                name == "smoothScrollToPosition"
-            }
-            val classDef = classes.find { it.type == EXTENSION_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $EXTENSION_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.addInstruction(
-                0,
-                "invoke-virtual {p0, p1}, ${recyclerViewSmoothScrollToPositionFingerprint.methodCall()}"
-            )
+        // ✅ Morphe: obtener clase mutable correctamente
+        val method = findMethodOrThrow(EXTENSION_CLASS_DESCRIPTOR) {
+            name == "smoothScrollToPosition"
         }
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val classDef = classDefs.find { it.type == EXTENSION_CLASS_DESCRIPTOR }
+            ?: throw PatchException("Class not found: $EXTENSION_CLASS_DESCRIPTOR")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.addInstruction(
+            0,
+            "invoke-virtual {p0, p1}, ${recyclerViewSmoothScrollToPositionFingerprint.methodCall()}"
+        )
     }
 }
