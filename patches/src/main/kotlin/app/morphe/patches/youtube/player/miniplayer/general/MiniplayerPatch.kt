@@ -13,8 +13,8 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.youtube.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import app.morphe.patches.youtube.utils.extension.Constants.PLAYER_PATH
 import app.morphe.patches.youtube.utils.patch.PatchList.MINIPLAYER
@@ -159,7 +159,8 @@ val miniplayerPatch = bytecodePatch(
 
         miniplayerOverrideFingerprint.matchOrThrow().let {
             it.method.apply {
-                val stringIndex = it.stringMatches!!.first().index
+                // ✅ Morphe: stringMatches no es nullable
+                val stringIndex = it.stringMatches.first().index
                 val walkerIndex = indexOfFirstInstructionOrThrow(stringIndex) {
                     val reference = getReference<MethodReference>()
                     reference?.returnType == "Z" &&
@@ -178,8 +179,9 @@ val miniplayerPatch = bytecodePatch(
             }
         }
 
+        // ✅ Morphe: usar instructionMatches en lugar de patternMatch
         miniplayerResponseModelSizeCheckFingerprint.matchOrThrow().let {
-            it.method.insertLegacyTabletMiniplayerOverride(it.patternMatch!!.endIndex)
+            it.method.insertLegacyTabletMiniplayerOverride(it.instructionMatches.last().index)
         }
 
         if (isPatchingOldVersion) {
