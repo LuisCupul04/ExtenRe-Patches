@@ -17,14 +17,15 @@ import app.morphe.patches.reddit.utils.extension.Constants.PATCHES_PATH
 import app.morphe.patches.reddit.utils.patch.PatchList.DISABLE_SCREENSHOT_POPUP
 import app.morphe.patches.reddit.utils.settings.settingsPatch
 import app.morphe.patches.reddit.utils.settings.updatePatchStatus
-import app.morphe.util.findMutableMethodOf
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstruction
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.util.MethodUtil
 
 @Suppress("unused")
 val screenshotPopupPatch = bytecodePatch(
@@ -68,26 +69,30 @@ val screenshotPopupPatch = bytecodePatch(
 
         var hookCount = 0
 
-        classes.forEach { classDef ->
+        // ✅ Morphe: usar classDefs en lugar de classes
+        classDefs.forEach { classDef ->
             classDef.methods.forEach { method ->
                 if (method.isScreenShotMethod()) {
-                    proxy(classDef)
-                        .mutableClass
-                        .findMutableMethodOf(method)
-                        .apply {
-                            val showBannerIndex = indexOfShowBannerInstruction(this)
-                            val booleanIndex = indexOfBooleanInstruction(this, showBannerIndex)
-                            val booleanRegister =
-                                getInstruction<OneRegisterInstruction>(booleanIndex).registerA
+                    // ✅ Morphe: obtener clase mutable directamente
+                    val mutableClass = mutableClassDefBy(classDef)
+                    // Buscar el método mutable por firma
+                    val mutableMethod = mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
+                    mutableMethod.apply {
+                        val showBannerIndex = indexOfShowBannerInstruction(this)
+                        val booleanIndex = indexOfBooleanInstruction(this, showBannerIndex)
+                        val booleanRegister =
+                            getInstruction<OneRegisterInstruction>(booleanIndex).registerA
 
-                            addInstructions(
-                                booleanIndex + 1, """
+                        addInstructions(
+                            booleanIndex + 1, """
                                     invoke-static {v$booleanRegister}, $PATCHES_PATH/ScreenshotPopupPatch;->disableScreenshotPopup(Ljava/lang/Boolean;)Ljava/lang/Boolean;
                                     move-result-object v$booleanRegister
                                     """
-                            )
-                            hookCount++
-                        }
+                        )
+                        hookCount++
+                    }
                 }
             }
         }
