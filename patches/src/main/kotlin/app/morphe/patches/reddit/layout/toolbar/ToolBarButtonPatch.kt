@@ -18,6 +18,7 @@ import app.morphe.patches.reddit.utils.settings.settingsPatch
 import app.morphe.patches.reddit.utils.settings.updatePatchStatus
 import app.morphe.util.fingerprint.matchOrThrow
 import app.morphe.util.indexOfFirstInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.util.MethodUtil
@@ -39,11 +40,13 @@ val toolBarButtonPatch = bytecodePatch(
         val homePagerScreenMatch = homePagerScreenFingerprint.matchOrThrow()
         val method = homePagerScreenMatch.method
         val classDef = homePagerScreenMatch.classDef
-        val mutableMethod = proxy(classDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, method)
         }
         mutableMethod.apply {
-            val stringIndex = homePagerScreenMatch.stringMatches!!.first().index
+            // ✅ Morphe: stringMatches no es nullable, quitar el operador !!
+            val stringIndex = homePagerScreenMatch.stringMatches.first().index
             val insertIndex = indexOfFirstInstructionOrThrow(stringIndex, Opcode.CHECK_CAST)
             val insertRegister =
                 getInstruction<OneRegisterInstruction>(insertIndex).registerA
