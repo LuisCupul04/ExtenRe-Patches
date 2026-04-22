@@ -16,7 +16,7 @@ import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.resourcePatch
 import app.morphe.patcher.patch.stringOption
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import app.morphe.patches.reddit.utils.extension.Constants.EXTENSION_PATH
 import app.morphe.patches.reddit.utils.extension.sharedExtensionPatch
@@ -32,6 +32,7 @@ import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstStringInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.valueOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.builder.instruction.BuilderInstruction21c
@@ -108,7 +109,8 @@ private val settingsBytecodePatch = bytecodePatch(
          */
         ossLicensesMenuActivityOnCreateFingerprint.matchOrThrow().let {
             it.method.apply {
-                val insertIndex = it.patternMatch!!.startIndex + 1
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val insertIndex = it.instructionMatches.first().index + 1
 
                 addInstructions(
                     insertIndex, """
@@ -121,21 +123,21 @@ private val settingsBytecodePatch = bytecodePatch(
 
         settingsStatusLoadMethod = settingsStatusLoadFingerprint.mutableMethodOrThrow()
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
-                name == "setThemeColor"
-            }
-            val classDef = classes.find { it.type == EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.addInstruction(
-                0,
-                "invoke-static {}, $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR->updateDarkModeStatus()V"
-            )
+        // ✅ Morphe: obtener clase mutable correctamente
+        val method = findMethodOrThrow(EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR) {
+            name == "setThemeColor"
         }
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val classDef = classDefs.find { it.type == EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR }
+            ?: throw PatchException("Class not found: $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.addInstruction(
+            0,
+            "invoke-static {}, $EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR->updateDarkModeStatus()V"
+        )
     }
 }
 
