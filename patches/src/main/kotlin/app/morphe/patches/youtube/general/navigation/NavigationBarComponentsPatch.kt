@@ -164,7 +164,8 @@ val navigationBarComponentsPatch = bytecodePatch(
         ).forEach { fingerprint ->
             fingerprint.matchOrThrow().let {
                 it.method.apply {
-                    val targetIndex = it.patternMatch!!.startIndex + 1
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val targetIndex = it.instructionMatches.first().index + 1
                     val register = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
                     addInstructions(
@@ -486,4 +487,3 @@ val navigationBarComponentsPatch = bytecodePatch(
         // endregion
     }
 }
-
