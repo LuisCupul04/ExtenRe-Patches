@@ -14,6 +14,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.removeInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.shared.dislikeFingerprint
 import app.morphe.patches.shared.likeFingerprint
@@ -47,6 +48,7 @@ import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -72,11 +74,13 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         rollingNumberSetterFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef directamente
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val rollingNumberClassIndex = match.patternMatch!!.startIndex
+                // ✅ Morphe: usar instructionMatches
+                val rollingNumberClassIndex = match.instructionMatches.first().index
                 val rollingNumberClassReference =
                     getInstruction<ReferenceInstruction>(rollingNumberClassIndex).reference.toString()
                 val rollingNumberConstructorMethod = mutableClassDefBy(rollingNumberClassReference).methods.first { m ->
@@ -113,11 +117,13 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         rollingNumberMeasureAnimatedTextFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val endIndex = match.patternMatch!!.endIndex
+                // ✅ Morphe: instructionMatches
+                val endIndex = match.instructionMatches.last().index
                 val measuredTextWidthIndex = endIndex - 2
                 val measuredTextWidthRegister =
                     getInstruction<TwoRegisterInstruction>(measuredTextWidthIndex).registerA
@@ -146,11 +152,13 @@ private val returnYouTubeDislikeRollingNumberPatch = bytecodePatch(
         ).let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val measureTextIndex = match.patternMatch!!.startIndex + 1
+                // ✅ Morphe: instructionMatches
+                val measureTextIndex = match.instructionMatches.first().index + 1
                 val freeRegister = getInstruction<TwoRegisterInstruction>(0).registerA
 
                 addInstructions(
@@ -194,11 +202,13 @@ private val returnYouTubeDislikeShortsPatch = bytecodePatch(
         shortsTextViewFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val startIndex = match.patternMatch!!.startIndex
+                // ✅ Morphe: instructionMatches
+                val startIndex = match.instructionMatches.first().index
 
                 val isDisLikesBooleanIndex = indexOfFirstInstructionReversedOrThrow(startIndex, Opcode.IGET_BOOLEAN)
                 val textViewFieldIndex = indexOfFirstInstructionReversedOrThrow(startIndex, Opcode.IGET_OBJECT)
