@@ -31,6 +31,7 @@ import app.morphe.util.copyResources
 import app.morphe.util.findMethodOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.valueOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -65,21 +66,20 @@ private val darkThemeBytecodePatch = bytecodePatch(
             )
         }
 
-        // Reemplazar mutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
-                name == "DarkTheme"
-            }
-            val classDef = classes.find { it.type == PATCH_STATUS_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $PATCH_STATUS_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.replaceInstruction(
-                0,
-                "const/4 v0, 0x1"
-            )
+        // ✅ Morphe: buscar clase mutable correctamente
+        val method = findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
+            name == "DarkTheme"
         }
+        val classDef = classDefs.find { it.type == PATCH_STATUS_CLASS_DESCRIPTOR }
+            ?: throw PatchException("Class not found: $PATCH_STATUS_CLASS_DESCRIPTOR")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.replaceInstruction(
+            0,
+            "const/4 v0, 0x1"
+        )
     }
 }
 
