@@ -23,6 +23,7 @@ import app.morphe.util.getReference
 import app.morphe.util.getWalkerMethod
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstStringInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -56,11 +57,13 @@ val backgroundPlaybackPatch = bytecodePatch(
         musicBrowserServiceFingerprint.matchOrThrow().let {
             val musicMethod = it.method
             val musicClassDef = it.classDef
-            val musicMutableMethod = proxy(musicClassDef).mutableClass.methods.first {
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val musicMutableMethod = mutableClassDefBy(musicClassDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, musicMethod)
             }
             musicMutableMethod.apply {
-                val stringIndex = it.stringMatches!!.first().index
+                // ✅ Morphe: stringMatches no es nullable, quitar el operador !!
+                val stringIndex = it.stringMatches.first().index
                 val targetIndex = indexOfFirstInstructionOrThrow(stringIndex) {
                     val reference = getReference<MethodReference>()
                     opcode == Opcode.INVOKE_VIRTUAL &&
