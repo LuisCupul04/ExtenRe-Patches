@@ -67,7 +67,8 @@ val playlistPatch = bytecodePatch(
             .matchOrThrow(editPlaylistConstructorFingerprint)
             .let {
                 it.method.apply {
-                    val castIndex = it.patternMatch!!.startIndex
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val castIndex = it.instructionMatches.first().index
                     val castClass =
                         getInstruction<ReferenceInstruction>(castIndex).reference.toString()
 
