@@ -13,9 +13,9 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableClass
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableClass
+import app.morphe.patcher.util.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patcher.util.smali.toInstructions
 import app.morphe.patches.music.utils.extension.Constants.SHARED_PATH
 import app.morphe.patches.music.utils.playbackSpeedFingerprint
@@ -31,6 +31,7 @@ import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.fingerprint.mutableClassOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -190,7 +191,8 @@ val videoInformationPatch = bytecodePatch(
         videoIdFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: usar mutableClassDefBy con classDef directamente
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
@@ -226,14 +228,13 @@ val videoInformationPatch = bytecodePatch(
          * Set the video time method
          */
         playerControllerSetTimeReferenceFingerprint.matchOrThrow().let { match ->
-            // Obtener la instrucción en la posición startIndex del patrón
             val method = match.method
-            val startIndex = match.patternMatch!!.startIndex
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val startIndex = match.instructionMatches.first().index
             val referenceInstruction = method.getInstruction<ReferenceInstruction>(startIndex)
             val methodRef = referenceInstruction.reference as? MethodReference
                 ?: throw PatchException("No method reference at index $startIndex")
 
-            // Obtener la clase mutable del método referenciado
             val targetClass = methodRef.definingClass
             videoTimeConstructorMethod = mutableClassDefBy(targetClass).methods.first {
                 it.name == methodRef.name && it.parameterTypes == methodRef.parameterTypes
@@ -269,7 +270,8 @@ val videoInformationPatch = bytecodePatch(
          */
         playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint).let { match ->
             val method = match.method
-            val endIndex = match.patternMatch!!.endIndex
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val endIndex = match.instructionMatches.last().index
             val referenceInstruction = method.getInstruction<ReferenceInstruction>(endIndex)
             val methodRef = referenceInstruction.reference as? MethodReference
                 ?: throw PatchException("No method reference at index $endIndex")
@@ -289,7 +291,7 @@ val videoInformationPatch = bytecodePatch(
     }
 }
 
-// Las siguientes funciones auxiliares permanecen sin cambios
+// Las siguientes funciones auxiliares permanecen sin cambios (ya son compatibles con Morphe)
 private fun MutableMethod.getVideoInformationMethod(): MutableMethod =
     ImmutableMethod(
         definingClass,
