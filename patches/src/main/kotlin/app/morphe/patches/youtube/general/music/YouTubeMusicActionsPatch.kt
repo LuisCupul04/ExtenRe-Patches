@@ -39,7 +39,8 @@ val youtubeMusicActionsPatch = bytecodePatch(
 
         appDeepLinkFingerprint.matchOrThrow().let {
             it.method.apply {
-                val packageNameIndex = it.patternMatch!!.startIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val packageNameIndex = it.instructionMatches.first().index
                 val packageNameField =
                     getInstruction<ReferenceInstruction>(packageNameIndex).reference.toString()
 
