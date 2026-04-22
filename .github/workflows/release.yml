@@ -13,11 +13,9 @@ jobs:
       contents: write
       packages: write
     runs-on: ubuntu-latest
-    # 🔑 Variables de entorno a nivel de job para que estén disponibles en todos los pasos
     env:
       GITHUB_ACTOR: ${{ github.actor }}
       GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
-      # Si tu proyecto necesita GPG para firmar commits/tags
       GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
@@ -46,23 +44,30 @@ jobs:
 
       - name: Build and generate patches
         run: |
-          # Gradle ahora tiene acceso a GITHUB_ACTOR y GITHUB_TOKEN
           ./gradlew :extensions:shared:syncExtension \
                     :extensions:spoof-signature:syncExtension \
                     :extensions:spoof-wifi:syncExtension \
                     :patches:jar \
                     generatePatchesFiles
 
-      - name: Setup Node.js (opcional)
+      - name: Get patch file name
+        id: patch_name
+        run: |
+          # Ajusta la ruta según donde genere el .mpp tu build
+          PATCH_FILE=$(ls patches/build/libs/*.mpp | head -n 1)
+          echo "PATCH_FILE=$PATCH_FILE" >> $GITHUB_OUTPUT
+          echo "PATCH_BASENAME=$(basename $PATCH_FILE)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: "lts/*"
           cache: 'npm'
 
-      - name: Install dependencies (si las necesitas)
+      - name: Install dependencies
         run: npm install
 
-      - name: Import GPG key (opcional, para firmar)
+      - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v7
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -72,18 +77,38 @@ jobs:
           git_commit_gpgsign: true
           git_tag_gpgsign: true
 
+      - name: Sign patch file
+        run: |
+          gpg --batch --yes --detach-sign --armor --passphrase "${{ secrets.GPG_PASSPHRASE }}" "${{ steps.patch_name.outputs.PATCH_FILE }}"
+
+      - name: Generate patches-list.json
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          PATCH_BASENAME="${{ steps.patch_name.outputs.PATCH_BASENAME }}"
+          TIMESTAMP=$(date -Iseconds)
+          cat > patches-list.json <<EOF
+          {
+            "created_at": "$TIMESTAMP",
+            "description": "# ExtenRe Patches\n\nParches para aplicaciones ExtenRe.\n\n## Cambios en esta versión\n- Añadido soporte para X\n- Corregido error en Y",
+            "download_url": "https://github.com/${{ github.repository }}/releases/download/v$VERSION/$PATCH_BASENAME",
+            "signature_download_url": "https://github.com/${{ github.repository }}/releases/download/v$VERSION/$PATCH_BASENAME.asc",
+            "version": "$VERSION"
+          }
+          EOF
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           files: |
-            patches/build/libs/*.EXRE
-            patches-exre.json
+            ${{ steps.patch_name.outputs.PATCH_FILE }}
+            ${{ steps.patch_name.outputs.PATCH_FILE }}.asc
+            patches-list.json
         env:
           GITHUB_TOKEN: ${{ secrets.EXTEN_TOKEN }}
 
-      - name: Publish to GitHub Packages (si es necesario)
+      - name: Publish to GitHub Packages
         run: ./gradlew :patches:publish
         env:
           GITHUB_ACTOR: ${{ github.actor }}
