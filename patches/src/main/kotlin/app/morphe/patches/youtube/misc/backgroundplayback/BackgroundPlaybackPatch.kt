@@ -28,6 +28,7 @@ import app.morphe.util.fingerprint.matchOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.fingerprint.originalMethodOrThrow
 import app.morphe.util.getReference
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.returnEarly
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -77,7 +78,8 @@ val backgroundPlaybackPatch = bytecodePatch(
         backgroundPlaybackSettingsFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: usar mutableClassDefBy con classDef directamente
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             val booleanCalls = mutableMethod.instructions.withIndex().filter {
@@ -110,11 +112,13 @@ val backgroundPlaybackPatch = bytecodePatch(
                     .let { match ->
                         val method = match.method
                         val classDef = match.classDef
-                        val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                        // ✅ Morphe: usar mutableClassDefBy con classDef
+                        val mutableMethod = mutableClassDefBy(classDef).methods.first {
                             MethodUtil.methodSignaturesMatch(it, method)
                         }
                         mutableMethod.apply {
-                            val insertIndex = match.patternMatch!!.startIndex + 4
+                            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                            val insertIndex = match.instructionMatches.first().index + 4
                             val insertRegister =
                                 getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
