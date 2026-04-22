@@ -51,6 +51,7 @@ import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstruction
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.updatePatchStatus
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -144,11 +145,13 @@ val videoPlaybackPatch = bytecodePatch(
         mediaLibPlayerLoadVideoFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: usar mutableClassDefBy con classDef directamente
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val startIndex = match.patternMatch!!.endIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val startIndex = match.instructionMatches.last().index
                 val targetIndex = indexOfPlaybackSpeedInstruction(this, startIndex)
                 val targetReference =
                     getInstruction<ReferenceInstruction>(targetIndex).reference as FieldReference
@@ -189,11 +192,13 @@ val videoPlaybackPatch = bytecodePatch(
         qualityChangedFromRecyclerViewFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val index = match.patternMatch!!.startIndex
+                // ✅ Morphe: instructionMatches
+                val index = match.instructionMatches.first().index
                 val register = getInstruction<TwoRegisterInstruction>(index).registerA
 
                 addInstruction(
@@ -260,7 +265,8 @@ val videoPlaybackPatch = bytecodePatch(
         // region patch for spoof device dimensions
         val deviceDimensionsModelMatch = deviceDimensionsModelToStringFingerprint.matchOrThrow()
         val deviceDimensionsModelClass = deviceDimensionsModelMatch.classDef.type
-        val mutableClass = mutableClassDefBy(deviceDimensionsModelClass)
+        // ✅ Morphe: mutableClassDefBy con classDef
+        val mutableClass = mutableClassDefBy(deviceDimensionsModelMatch.classDef)
         val constructor = mutableClass.methods.find { MethodUtil.isConstructor(it) }
             ?: throw PatchException("Constructor not found in $deviceDimensionsModelClass")
         constructor.addInstructions(
