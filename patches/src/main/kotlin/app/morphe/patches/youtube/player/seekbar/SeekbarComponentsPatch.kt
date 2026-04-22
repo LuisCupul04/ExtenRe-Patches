@@ -15,7 +15,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLa
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.shared.drawable.addDrawableColorHook
 import app.morphe.patches.shared.drawable.drawableColorHookPatch
@@ -62,6 +62,7 @@ import app.morphe.util.getWalkerMethod
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
 import app.morphe.util.inputStreamFromBundledResource
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.updatePatchStatus
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
@@ -259,8 +260,9 @@ val seekbarComponentsPatch = bytecodePatch(
         }
 
         controlsOverlayStyleFingerprint.matchOrThrow().let {
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
             val walkerMethod =
-                it.getWalkerMethod(it.patternMatch!!.startIndex + 1)
+                it.getWalkerMethod(it.instructionMatches.first().index + 1)
             walkerMethod.apply {
                 val colorRegister = getInstruction<TwoRegisterInstruction>(0).registerA
 
@@ -333,7 +335,8 @@ val seekbarComponentsPatch = bytecodePatch(
 
             playerFingerprint.matchOrThrow().let {
                 it.method.apply {
-                    val index = it.patternMatch!!.endIndex
+                    // ✅ Morphe: instructionMatches
+                    val index = it.instructionMatches.last().index
                     val register = getInstruction<OneRegisterInstruction>(index).registerA
 
                     addInstructions(
