@@ -41,6 +41,7 @@ import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstruction
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.returnEarly
 import app.morphe.util.valueOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -214,8 +215,9 @@ fun gmsCoreSupportPatch(
             AUTHORITIES_LEGACY
 
         fun transformStringReferences(transform: (str: String) -> String?) {
-            classes.forEach { classDef ->
-                val mutableClass = mutableClassDefBy(classDef.type)
+            // ✅ Morphe: usar classDefs en lugar de classes
+            classDefs.forEach { classDef ->
+                val mutableClass = mutableClassDefBy(classDef)
                 classDef.methods.forEach classLoop@{ method ->
                     val implementation = method.implementation ?: return@classLoop
                     val mutableMethod = mutableClass.methods.first { target ->
@@ -285,7 +287,8 @@ fun gmsCoreSupportPatch(
                 primeMethodFingerprint.matchOrNull()?.let { match ->
                     val method = match.method
                     val classDef = match.classDef
-                    val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                    // ✅ Morphe: usar mutableClassDefBy con classDef directamente
+                    val mutableMethod = mutableClassDefBy(classDef).methods.first {
                         MethodUtil.methodSignaturesMatch(it, method)
                     }
                     var register = 2
@@ -378,7 +381,8 @@ fun gmsCoreSupportPatch(
             mainActivityOnCreateFingerprint.matchOrNull()?.let { match ->
                 val method = match.method
                 val classDef = match.classDef
-                val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                // ✅ Morphe: usar mutableClassDefBy con classDef
+                val mutableMethod = mutableClassDefBy(classDef).methods.first {
                     MethodUtil.methodSignaturesMatch(it, method)
                 }
                 mutableMethod.apply {
