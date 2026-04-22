@@ -13,7 +13,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.youtube.utils.extension.Constants.SHARED_PATH
 import app.morphe.patches.youtube.utils.extension.sharedExtensionPatch
 import app.morphe.patches.youtube.utils.resourceid.sharedResourceIdPatch
@@ -22,6 +22,7 @@ import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstruction
 import app.morphe.util.indexOfFirstInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -65,27 +66,27 @@ val engagementPanelHookPatch = bytecodePatch(
             .parameters[0]
             .toString()
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual para obtener el método del constructor de la clase de información
-        val (engagementPanelIdReference, engagementPanelObjectReference) = run {
-            val method = findMethodOrThrow(engagementPanelInfoClass)
-            val classDef = classes.find { it.type == engagementPanelInfoClass }
-                ?: throw PatchException("Class not found: $engagementPanelInfoClass")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            val engagementPanelIdIndex = mutableMethod.indexOfFirstInstructionOrThrow {
-                opcode == Opcode.IPUT_OBJECT &&
-                        getReference<FieldReference>()?.type == "Ljava/lang/String;"
-            }
-            val engagementPanelObjectIndex = mutableMethod.indexOfFirstInstructionOrThrow {
-                opcode == Opcode.IPUT_OBJECT &&
-                        getReference<FieldReference>()?.type != "Ljava/lang/String;"
-            }
-            Pair(
-                mutableMethod.getInstruction<ReferenceInstruction>(engagementPanelIdIndex).reference.toString(),
-                mutableMethod.getInstruction<ReferenceInstruction>(engagementPanelObjectIndex).reference.toString(),
-            )
+        // ✅ Morphe: obtener método y clase mutable del constructor de la clase de información
+        val method = findMethodOrThrow(engagementPanelInfoClass)
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val classDef = classDefs.find { it.type == engagementPanelInfoClass }
+            ?: throw PatchException("Class not found: $engagementPanelInfoClass")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
         }
+        val engagementPanelIdIndex = mutableMethod.indexOfFirstInstructionOrThrow {
+            opcode == Opcode.IPUT_OBJECT &&
+                    getReference<FieldReference>()?.type == "Ljava/lang/String;"
+        }
+        val engagementPanelObjectIndex = mutableMethod.indexOfFirstInstructionOrThrow {
+            opcode == Opcode.IPUT_OBJECT &&
+                    getReference<FieldReference>()?.type != "Ljava/lang/String;"
+        }
+        val (engagementPanelIdReference, engagementPanelObjectReference) = Pair(
+            mutableMethod.getInstruction<ReferenceInstruction>(engagementPanelIdIndex).reference.toString(),
+            mutableMethod.getInstruction<ReferenceInstruction>(engagementPanelObjectIndex).reference.toString(),
+        )
 
         engagementPanelBuilderFingerprint.mutableMethodOrThrow().apply {
             val insertIndex = indexOfFirstInstructionOrThrow {
