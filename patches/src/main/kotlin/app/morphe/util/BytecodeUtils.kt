@@ -21,10 +21,10 @@ import app.morphe.patcher.extensions.InstructionExtensions.removeInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.PatchException
-import app.morphe.patcher.util.proxy.mutableTypes.MutableClass
-import app.morphe.patcher.util.proxy.mutableTypes.MutableField.Companion.toMutable
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableClass
+import app.morphe.patcher.util.mutableTypes.MutableField.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.shared.mapping.getResourceId
 import app.morphe.patches.shared.mapping.resourceMappingPatch
@@ -565,8 +565,10 @@ fun BytecodePatchContext.traverseClassHierarchy(
 
     targetClass.superclass ?: return
 
-    classBy { targetClass.superclass == it.type }?.mutableClass?.let {
-        traverseClassHierarchy(it, callback)
+    // ✅ Morphe: usar classDefs y mutableClassDefBy en lugar de classBy y mutableClass
+    classDefs.find { targetClass.superclass == it.type }?.let { classDef ->
+        val mutableClass = mutableClassDefBy(classDef)
+        traverseClassHierarchy(mutableClass, callback)
     }
 }
 
@@ -588,7 +590,8 @@ fun BytecodePatchContext.replaceLiteralInstructionCall(
     originalLiteral: Long,
     replaceLiteral: Long
 ) {
-    classes.forEach { classDef ->
+    // ✅ Morphe: usar classDefs en lugar de classes
+    classDefs.forEach { classDef ->
         classDef.methods.forEach { method ->
             method.implementation.apply {
                 this?.instructions?.forEachIndexed { _, instruction ->
@@ -597,15 +600,18 @@ fun BytecodePatchContext.replaceLiteralInstructionCall(
                     if ((instruction as Instruction31i).wideLiteral != originalLiteral)
                         return@forEachIndexed
 
-                    proxy(classDef)
-                        .mutableClass
-                        .findMutableMethodOf(method).apply {
-                            val index = indexOfFirstLiteralInstructionOrThrow(originalLiteral)
-                            val register =
-                                (instruction as OneRegisterInstruction).registerA
+                    // ✅ Morphe: usar mutableClassDefBy y buscar método mutable por firma
+                    val mutableClass = mutableClassDefBy(classDef)
+                    val mutableMethod = mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
+                    mutableMethod.apply {
+                        val index = indexOfFirstLiteralInstructionOrThrow(originalLiteral)
+                        val register =
+                            (instruction as OneRegisterInstruction).registerA
 
-                            replaceInstruction(index, "const v$register, $replaceLiteral")
-                        }
+                        replaceInstruction(index, "const v$register, $replaceLiteral")
+                    }
                 }
             }
         }
@@ -616,7 +622,8 @@ fun BytecodePatchContext.replaceLiteralInstructionCall(
     literal: Long,
     smaliInstruction: String
 ) {
-    classes.forEach { classDef ->
+    // ✅ Morphe: usar classDefs en lugar de classes
+    classDefs.forEach { classDef ->
         classDef.methods.forEach { method ->
             method.implementation.apply {
                 this?.instructions?.forEachIndexed { _, instruction ->
@@ -625,18 +632,21 @@ fun BytecodePatchContext.replaceLiteralInstructionCall(
                     if ((instruction as Instruction31i).wideLiteral != literal)
                         return@forEachIndexed
 
-                    proxy(classDef)
-                        .mutableClass
-                        .findMutableMethodOf(method).apply {
-                            val index = indexOfFirstLiteralInstructionOrThrow(literal)
-                            val register =
-                                (instruction as OneRegisterInstruction).registerA.toString()
+                    // ✅ Morphe: usar mutableClassDefBy y buscar método mutable por firma
+                    val mutableClass = mutableClassDefBy(classDef)
+                    val mutableMethod = mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
+                    mutableMethod.apply {
+                        val index = indexOfFirstLiteralInstructionOrThrow(literal)
+                        val register =
+                            (instruction as OneRegisterInstruction).registerA.toString()
 
-                            addInstructions(
-                                index + 1,
-                                smaliInstruction.replace(REGISTER_TEMPLATE_REPLACEMENT, register)
-                            )
-                        }
+                        addInstructions(
+                            index + 1,
+                            smaliInstruction.replace(REGISTER_TEMPLATE_REPLACEMENT, register)
+                        )
+                    }
                 }
             }
         }
@@ -800,7 +810,6 @@ fun Method.indexOfFirstInstructionReversedOrThrow(
     filter: Instruction.() -> Boolean
 ): Int {
     val index = indexOfFirstInstructionReversed(startIndex, filter)
-
     if (index < 0) {
         throw PatchException("Could not find instruction index")
     }
@@ -862,13 +871,18 @@ fun BytecodePatchContext.forEachLiteralValueInstruction(
     literal: Long,
     block: MutableMethod.(literalInstructionIndex: Int) -> Unit,
 ) {
-    classes.forEach { classDef ->
+    // ✅ Morphe: usar classDefs en lugar de classes
+    classDefs.forEach { classDef ->
         classDef.methods.forEach { method ->
             method.implementation?.instructions?.forEachIndexed { index, instruction ->
                 if (instruction.opcode == CONST &&
                     (instruction as WideLiteralInstruction).wideLiteral == literal
                 ) {
-                    val mutableMethod = proxy(classDef).mutableClass.findMutableMethodOf(method)
+                    // ✅ Morphe: obtener clase mutable y método mutable
+                    val mutableClass = mutableClassDefBy(classDef)
+                    val mutableMethod = mutableClass.methods.first {
+                        MethodUtil.methodSignaturesMatch(it, method)
+                    }
                     block.invoke(mutableMethod, index)
                 }
             }
@@ -907,9 +921,10 @@ fun addStaticFieldToExtension(
     smaliInstructions: String,
     shouldAddConstructor: Boolean = true
 ): MutableMethod {
-    val classDef = classes.find { classDef -> classDef.type == className }
+    // ✅ Morphe: buscar classDef y obtener mutableClass
+    val classDef = classDefs.find { classDef -> classDef.type == className }
         ?: throw PatchException("No matching methods found in: $className")
-    val mutableClass = proxy(classDef).mutableClass
+    val mutableClass = mutableClassDefBy(classDef)
 
     val objectCall = "$mutableClass->$fieldName:$objectClass"
     val method = with(mutableClass) {
@@ -980,10 +995,10 @@ fun findMethodsOrThrow(
 
 context(BytecodePatchContext)
 fun findMutableClassOrThrow(reference: String): MutableClass {
-    val classDef = classes.find { classDef -> classDef.type == reference }
+    // ✅ Morphe: buscar classDef y obtener mutableClass
+    val classDef = classDefs.find { classDef -> classDef.type == reference }
         ?: throw PatchException("No matching methods found in: $reference")
-    return proxy(classDef)
-        .mutableClass
+    return mutableClassDefBy(classDef)
 }
 
 context(BytecodePatchContext)
