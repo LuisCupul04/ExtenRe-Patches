@@ -60,7 +60,8 @@ val feedFlyoutMenuPatch = bytecodePatch(
 
         contextualMenuItemBuilderFingerprint.matchOrThrow().let {
             it.method.apply {
-                val targetIndex = it.patternMatch!!.startIndex + 1
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val targetIndex = it.instructionMatches.first().index + 1
                 val targetInstruction = getInstruction<Instruction35c>(targetIndex)
 
                 val targetReferenceName =
