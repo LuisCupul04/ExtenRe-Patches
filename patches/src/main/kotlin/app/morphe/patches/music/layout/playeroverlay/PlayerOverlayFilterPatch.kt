@@ -18,7 +18,7 @@ import app.morphe.util.removeOverlayBackground
 val playerOverlayFilterPatch = resourcePatch(
     HIDE_PLAYER_OVERLAY_FILTER.title,
     HIDE_PLAYER_OVERLAY_FILTER.summary,
-    use = false,
+    defaultEnable = false,   // ← Cambiado de 'use = false'
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
@@ -32,4 +32,3 @@ val playerOverlayFilterPatch = resourcePatch(
 
     }
 }
-
