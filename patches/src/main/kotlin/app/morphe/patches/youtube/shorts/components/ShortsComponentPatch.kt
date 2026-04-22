@@ -16,7 +16,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.removeInstructions
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.shared.litho.addLithoFilter
 import app.morphe.patches.shared.litho.lithoFilterPatch
@@ -100,6 +100,7 @@ import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstruction
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
 import app.morphe.util.indexOfFirstStringInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import app.morphe.util.replaceLiteralInstructionCall
 import com.android.tools.smali.dexlib2.AccessFlags
@@ -251,7 +252,8 @@ private val shortsCustomActionsPatch = bytecodePatch(
         bottomSheetMenuListBuilderFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: usar mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
@@ -279,7 +281,8 @@ private val shortsCustomActionsPatch = bytecodePatch(
                 val bottomSheetMenuObject =
                     (getInstruction<ReferenceInstruction>(bottomSheetMenuInitializeIndex).reference as MethodReference).parameterTypes[0]!!
 
-                val bottomSheetMenuListIndex = match.patternMatch!!.startIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val bottomSheetMenuListIndex = match.instructionMatches.first().index
                 val bottomSheetMenuListField =
                     (getInstruction<ReferenceInstruction>(bottomSheetMenuListIndex).reference as FieldReference)
 
@@ -334,7 +337,7 @@ private val shortsCustomActionsPatch = bytecodePatch(
                 val newParameter =
                     bottomSheetMenuItemBuilderMethod.parameters + listOf(customActionClass)
 
-                mutableClassDefBy(classDef.type).methods.add(
+                mutableClassDefBy(classDef).methods.add(
                     bottomSheetMenuItemBuilderMethod
                         .cloneMutable(
                             accessFlags = AccessFlags.PUBLIC or AccessFlags.FINAL,
@@ -422,7 +425,8 @@ private val shortsNavigationBarPatch = bytecodePatch(
 
     execute {
         var count = 0
-        classes.forEach { classDef ->
+        // ✅ Morphe: usar classDefs en lugar de classes
+        classDefs.forEach { classDef ->
             classDef.methods.filter { method ->
                 method.returnType == "V" &&
                 method.accessFlags == (AccessFlags.PUBLIC.value or AccessFlags.FINAL.value) &&
@@ -430,7 +434,8 @@ private val shortsNavigationBarPatch = bytecodePatch(
                 method.containsStringInstruction("r_pfvc") &&
                 method.containsLiteralInstruction(bottomBarContainer)
             }.forEach { method ->
-                val mutableClass = mutableClassDefBy(classDef.type)
+                // ✅ Morphe: obtener clase mutable directamente
+                val mutableClass = mutableClassDefBy(classDef)
                 val mutableMethod = mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
                 mutableMethod.apply {
                     val constIndex = indexOfFirstLiteralInstruction(bottomBarContainer)
@@ -497,12 +502,13 @@ private val shortsRepeatPatch = bytecodePatch(
                         } >= 0
             }
 
-            classes.forEach { classDef ->
+            // ✅ Morphe: usar classDefs en lugar de classes
+            classDefs.forEach { classDef ->
                 if (!insertMethodFound) {
                     classDef.methods.forEach { method ->
                         if (method.isInsertMethod()) {
                             insertMethodFound = true
-                            val mutableClass = mutableClassDefBy(classDef.type)
+                            val mutableClass = mutableClassDefBy(classDef)
                             insertMethod = mutableClass.methods.first { MethodUtil.methodSignaturesMatch(it, method) }
                         }
                     }
@@ -713,11 +719,13 @@ private val shortsToolBarPatch = bytecodePatch(
         shortsToolBarFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: usar mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val insertIndex = match.patternMatch!!.startIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val insertIndex = match.instructionMatches.first().index
                 val insertRegister = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
                 addInstructions(
@@ -970,11 +978,13 @@ val shortsComponentPatch = bytecodePatch(
         shortsPausedHeaderFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: usar mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val targetIndex = match.patternMatch!!.endIndex + 1
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val targetIndex = match.instructionMatches.last().index + 1
                 val targetInstruction = getInstruction(targetIndex)
                 val targetReference =
                     (targetInstruction as? ReferenceInstruction)?.reference as? MethodReference
@@ -1000,7 +1010,7 @@ val shortsComponentPatch = bytecodePatch(
                     )
                 } else {
                     // YouTube 19.29.42 ~
-                    val insertIndex = match.patternMatch!!.startIndex
+                    val insertIndex = match.instructionMatches.first().index
                     val insertRegister =
                         getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
