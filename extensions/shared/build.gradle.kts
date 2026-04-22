@@ -1,7 +1,8 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id("com.android.application")
+    id("com.android.library")
+    //id("com.android.application")
     //alias(libs.plugins.kotlin.android)
     //alias(libs.plugins.protobuf)
 }
