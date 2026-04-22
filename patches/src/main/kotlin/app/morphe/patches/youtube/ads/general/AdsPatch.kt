@@ -33,11 +33,11 @@ import app.morphe.patches.youtube.utils.resourceid.adAttribution
 import app.morphe.patches.youtube.utils.resourceid.sharedResourceIdPatch
 import app.morphe.patches.youtube.utils.settings.ResourceUtils.addPreference
 import app.morphe.patches.youtube.utils.settings.settingsPatch
-import app.morphe.util.findMutableMethodOf
 import app.morphe.util.fingerprint.matchOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.indexOfFirstStringInstructionOrThrow
 import app.morphe.util.injectHideViewCall
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -70,7 +70,8 @@ val adsPatch = adsPatch(
 
         // region patch for hide general ads
 
-        classes.forEach { classDef ->
+        // ✅ Morphe: usar classDefs en lugar de classes
+        classDefs.forEach { classDef ->
             classDef.methods.forEach { method ->
                 method.implementation.apply {
                     this?.instructions?.forEachIndexed { index, instruction ->
@@ -89,15 +90,17 @@ val adsPatch = adsPatch(
 
                             // Hide the view
                             val viewRegister = (this as Instruction35c).registerC
-                            proxy(classDef)
-                                .mutableClass
-                                .findMutableMethodOf(method)
-                                .injectHideViewCall(
-                                    insertIndex,
-                                    viewRegister,
-                                    ADS_CLASS_DESCRIPTOR,
-                                    "hideAdAttributionView"
-                                )
+                            // ✅ Morphe: obtener clase mutable y método mutable directamente
+                            val mutableClass = mutableClassDefBy(classDef)
+                            val mutableMethod = mutableClass.methods.first {
+                                MethodUtil.methodSignaturesMatch(it, method)
+                            }
+                            mutableMethod.injectHideViewCall(
+                                insertIndex,
+                                viewRegister,
+                                ADS_CLASS_DESCRIPTOR,
+                                "hideAdAttributionView"
+                            )
                         }
                     }
                 }
@@ -111,11 +114,13 @@ val adsPatch = adsPatch(
         val compactMatch = compactYpcOfferModuleViewFingerprint.matchOrThrow()
         val compactMethod = compactMatch.method
         val compactClassDef = compactMatch.classDef
-        val compactMutableMethod = proxy(compactClassDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val compactMutableMethod = mutableClassDefBy(compactClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, compactMethod)
         }
         compactMutableMethod.apply {
-            val startIndex = compactMatch.patternMatch!!.startIndex
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val startIndex = compactMatch.instructionMatches.first().index
             val measuredWidthRegister =
                 getInstruction<TwoRegisterInstruction>(startIndex).registerA
             val measuredHeightInstruction =
