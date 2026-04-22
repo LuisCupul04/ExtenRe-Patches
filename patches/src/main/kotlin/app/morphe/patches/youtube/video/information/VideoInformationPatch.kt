@@ -16,9 +16,9 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.removeInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableClass
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableClass
+import app.morphe.patcher.util.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patcher.util.smali.toInstructions
 import app.morphe.patches.shared.FIXED_RESOLUTION_STRING
@@ -55,6 +55,7 @@ import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -224,7 +225,8 @@ val videoInformationPatch = bytecodePatch(
         ): String {
             mutableMethodOrThrow().apply {
                 val startIndex = if (fromString == true)
-                    matchOrThrow().stringMatches!!.first().index
+                    // ✅ Morphe: stringMatches no es nullable
+                    matchOrThrow().stringMatches.first().index
                 else
                     0
                 val targetReference = getInstruction<ReferenceInstruction>(
@@ -344,7 +346,8 @@ val videoInformationPatch = bytecodePatch(
         playbackInitializationFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef directamente
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
@@ -357,7 +360,7 @@ val videoInformationPatch = bytecodePatch(
                 )
 
                 videoInformationMethod = getVideoInformationMethod()
-                mutableClassDefBy(classDef.type).methods.add(videoInformationMethod)
+                mutableClassDefBy(classDef).methods.add(videoInformationMethod)
 
                 hookVideoInformation("$EXTENSION_CLASS_DESCRIPTOR->setVideoInformation(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JZ)V")
             }
@@ -366,7 +369,8 @@ val videoInformationPatch = bytecodePatch(
         videoIdFingerprintBackgroundPlay.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
@@ -379,14 +383,15 @@ val videoInformationPatch = bytecodePatch(
                 )
 
                 backgroundVideoInformationMethod = getVideoInformationMethod()
-                mutableClassDefBy(classDef.type).methods.add(backgroundVideoInformationMethod)
+                mutableClassDefBy(classDef).methods.add(backgroundVideoInformationMethod)
             }
         }
 
         videoIdFingerprintShorts.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
@@ -399,7 +404,7 @@ val videoInformationPatch = bytecodePatch(
                 )
 
                 shortsVideoInformationMethod = getVideoInformationMethod()
-                mutableClassDefBy(classDef.type).methods.add(shortsVideoInformationMethod)
+                mutableClassDefBy(classDef).methods.add(shortsVideoInformationMethod)
             }
         }
 
@@ -409,10 +414,12 @@ val videoInformationPatch = bytecodePatch(
         playerControllerSetTimeReferenceFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
-            val startIndex = match.patternMatch!!.startIndex
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val startIndex = match.instructionMatches.first().index
             val invokeInstruction = mutableMethod.getInstruction<ReferenceInstruction>(startIndex)
             val methodRef = invokeInstruction.reference as? MethodReference
                 ?: throw PatchException("No method reference at index $startIndex")
@@ -447,7 +454,8 @@ val videoInformationPatch = bytecodePatch(
         onPlaybackSpeedItemClickFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
@@ -470,7 +478,7 @@ val videoInformationPatch = bytecodePatch(
                     getInstruction<ReferenceInstruction>(speedSelectionValueInstructionIndex + 2).reference as MethodReference
 
                 // add override playback speed method
-                mutableClassDefBy(classDef.type).methods.add(
+                mutableClassDefBy(classDef).methods.add(
                     ImmutableMethod(
                         definingClass,
                         "overridePlaybackSpeed",
@@ -525,11 +533,12 @@ val videoInformationPatch = bytecodePatch(
         videoIdFingerprintShorts.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val shortsPlaybackSpeedClassField = mutableClassDefBy(classDef.type).fields.find { field ->
+                val shortsPlaybackSpeedClassField = mutableClassDefBy(classDef).fields.find { field ->
                     field.type == setPlaybackSpeedMethodReference.definingClass
                 } ?: throw PatchException("Failed to find hook field")
 
@@ -550,7 +559,7 @@ val videoInformationPatch = bytecodePatch(
                 )
 
                 // add override playback speed method
-                mutableClassDefBy(classDef.type).methods.add(
+                mutableClassDefBy(classDef).methods.add(
                     ImmutableMethod(
                         definingClass,
                         "overridePlaybackSpeed",
@@ -634,7 +643,8 @@ val videoInformationPatch = bytecodePatch(
         videoQualityFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             // Fix bad data used by YouTube.
@@ -664,7 +674,7 @@ val videoInformationPatch = bytecodePatch(
             }
 
             // Add methods to access obfuscated quality fields.
-            val mutableClass = mutableClassDefBy(classDef.type)
+            val mutableClass = mutableClassDefBy(classDef)
             mutableClass.methods.add(
                 ImmutableMethod(
                     mutableClass.type,
@@ -710,7 +720,8 @@ val videoInformationPatch = bytecodePatch(
             .matchOrThrow()
             .let { match ->
                 with(match.method) {
-                    val stringIndex = match.stringMatches!!.first().index
+                    // ✅ Morphe: stringMatches no es nullable
+                    val stringIndex = match.stringMatches.first().index
                     val formatStreamIndex = indexOfFirstInstructionReversedOrThrow(stringIndex) {
                         val reference = getReference<MethodReference>()
                         opcode == Opcode.INVOKE_VIRTUAL &&
@@ -737,10 +748,12 @@ val videoInformationPatch = bytecodePatch(
                 formatStreamModelBuilderFingerprint
             ).let { match ->
                 with(match.method) {
-                    val mutableMethod = mutableClassDefBy(match.classDef.type).methods.first {
+                    // ✅ Morphe: mutableClassDefBy con classDef
+                    val mutableMethod = mutableClassDefBy(match.classDef).methods.first {
                         MethodUtil.methodSignaturesMatch(it, this)
                     }
-                    val formatStreamIndex = match.patternMatch!!.startIndex + 1
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val formatStreamIndex = match.instructionMatches.first().index + 1
                     val formatStreamResolutionReference =
                         getInstruction<ReferenceInstruction>(formatStreamIndex).reference as MethodReference
 
@@ -819,7 +832,8 @@ val videoInformationPatch = bytecodePatch(
             val match = playbackStartParametersToStringFingerprint.matchOrThrow()
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.findFieldFromToString(FIXED_RESOLUTION_STRING)
@@ -845,11 +859,13 @@ val videoInformationPatch = bytecodePatch(
         videoQualityArrayFingerprint.matchOrThrow(formatStreamModelBuilderFingerprint).let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val index = match.patternMatch!!.startIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val index = match.instructionMatches.first().index
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 
                 addInstructionsAtControlFlowLabel(
@@ -863,7 +879,7 @@ val videoInformationPatch = bytecodePatch(
 
         videoQualityListFingerprint.matchOrThrow().let { match ->
             val classDef = match.classDef
-            val mutableClass = mutableClassDefBy(classDef.type)
+            val mutableClass = mutableClassDefBy(classDef)
             val mutableMethod = mutableClass.methods.first {
                 MethodUtil.methodSignaturesMatch(it, match.method)
             }
@@ -900,7 +916,8 @@ val videoInformationPatch = bytecodePatch(
                         )
                     }
                 )
-                val interfaceIndex = match.patternMatch!!.startIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val interfaceIndex = match.instructionMatches.first().index
                 val listRegister =
                     getInstruction<FiveRegisterInstruction>(interfaceIndex).registerD
                 val indexRegister =
@@ -918,11 +935,13 @@ val videoInformationPatch = bytecodePatch(
         videoQualitySetterFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val textIndex = match.patternMatch!!.endIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val textIndex = match.instructionMatches.last().index
                 val textRegister = getInstruction<TwoRegisterInstruction>(textIndex).registerA
 
                 addInstruction(
