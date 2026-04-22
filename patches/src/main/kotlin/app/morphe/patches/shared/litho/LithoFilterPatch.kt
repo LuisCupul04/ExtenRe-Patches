@@ -12,8 +12,8 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.shared.conversionContextFingerprintToString
 import app.morphe.patches.shared.extension.Constants.COMPONENTS_PATH
 import app.morphe.util.addInstructionsAtControlFlowLabel
@@ -26,6 +26,7 @@ import app.morphe.util.fingerprint.mutableClassOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -80,9 +81,9 @@ val lithoFilterPatch = bytecodePatch(
         val conversionContextIdentifierField =
             componentContextParserFingerprint.matchOrThrow().let {
                 // Identifier field is loaded just before the string declaration.
-                val index = it.method.indexOfFirstInstructionReversedOrThrow(
-                    it.stringMatches!!.first().index
-                ) {
+                // ✅ Morphe: stringMatches no es nullable
+                val stringIndex = it.stringMatches.first().index
+                val index = it.method.indexOfFirstInstructionReversedOrThrow(stringIndex) {
                     val reference = getReference<FieldReference>()
                     reference?.definingClass == conversionContextClass.type
                             && reference.type == "Ljava/lang/String;"
@@ -104,10 +105,10 @@ val lithoFilterPatch = bytecodePatch(
                     method ->
                 AccessFlags.STATIC.isSet(method.accessFlags)
             }
-        val emptyComponentField = classBy {
-            // Only one field that matches.
+        // ✅ Morphe: reemplazar classBy por classDefs.find
+        val emptyComponentField = classDefs.find {
             it.type == builderMethodDescriptor.returnType
-        }!!.immutableClass.fields.single()
+        }!!.fields.single()
 
         emptyComponentLabel = """
             move-object/from16 v0, p1
@@ -257,5 +258,3 @@ val lithoFilterPatch = bytecodePatch(
         )
     }
 }
-
-
