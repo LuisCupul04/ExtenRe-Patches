@@ -29,6 +29,7 @@ import app.morphe.util.fingerprint.matchOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -92,30 +93,30 @@ val downloadActionsPatch = bytecodePatch(
                     ?: throw PatchException("Could not find onClickListenerClass")
             }
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(onClickListenerClass) {
-                name == "onClick"
+        // ✅ Morphe: obtener método y clase mutable
+        val method = findMethodOrThrow(onClickListenerClass) {
+            name == "onClick"
+        }
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val classDef = classDefs.find { it.type == onClickListenerClass }
+            ?: throw PatchException("Class not found: $onClickListenerClass")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.apply {
+            val insertIndex = indexOfFirstInstructionOrThrow {
+                opcode == Opcode.INVOKE_STATIC &&
+                        getReference<MethodReference>()?.name == "isEmpty"
             }
-            val classDef = classes.find { it.type == onClickListenerClass }
-                ?: throw PatchException("Class not found: $onClickListenerClass")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.apply {
-                val insertIndex = indexOfFirstInstructionOrThrow {
-                    opcode == Opcode.INVOKE_STATIC &&
-                            getReference<MethodReference>()?.name == "isEmpty"
-                }
-                val insertRegister = getInstruction<FiveRegisterInstruction>(insertIndex).registerC
+            val insertRegister = getInstruction<FiveRegisterInstruction>(insertIndex).registerC
 
-                addInstructions(
-                    insertIndex, """
+            addInstructions(
+                insertIndex, """
                         invoke-static {v$insertRegister}, $EXTENSION_CLASS_DESCRIPTOR->inAppPlaylistDownloadButtonOnClick(Ljava/lang/String;)Ljava/lang/String;
                         move-result-object v$insertRegister
                         """
-                )
-            }
+            )
         }
 
         offlinePlaylistEndpointFingerprint.mutableMethodOrThrow().apply {
@@ -168,7 +169,8 @@ val downloadActionsPatch = bytecodePatch(
         setPlaylistDownloadButtonVisibilityFingerprint
             .matchOrThrow(accessibilityOfflineButtonSyncFingerprint).let {
                 it.method.apply {
-                    val insertIndex = it.patternMatch!!.startIndex + 2
+                    // ✅ Morphe: instructionMatches en lugar de patternMatch
+                    val insertIndex = it.instructionMatches.first().index + 2
                     val insertRegister =
                         getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
