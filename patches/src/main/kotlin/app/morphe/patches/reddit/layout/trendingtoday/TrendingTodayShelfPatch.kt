@@ -21,6 +21,7 @@ import app.morphe.patches.reddit.utils.settings.updatePatchStatus
 import app.morphe.util.fingerprint.matchOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.util.MethodUtil
@@ -44,11 +45,13 @@ val trendingTodayShelfPatch = bytecodePatch(
         val trendingTodayTitleMatch = trendingTodayTitleFingerprint.matchOrThrow()
         val titleMethod = trendingTodayTitleMatch.method
         val titleClassDef = trendingTodayTitleMatch.classDef
-        val titleMutableMethod = proxy(titleClassDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val titleMutableMethod = mutableClassDefBy(titleClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, titleMethod)
         }
         titleMutableMethod.apply {
-            val stringIndex = trendingTodayTitleMatch.stringMatches!!.first().index
+            // ✅ Morphe: stringMatches no es nullable, quitar el operador !!
+            val stringIndex = trendingTodayTitleMatch.stringMatches.first().index
             val relativeIndex =
                 indexOfFirstInstructionReversedOrThrow(stringIndex, Opcode.AND_INT_LIT8)
             val insertIndex = indexOfFirstInstructionReversedOrThrow(
