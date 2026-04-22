@@ -13,7 +13,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.shared.litho.addLithoFilter
 import app.morphe.patches.shared.litho.lithoFilterPatch
 import app.morphe.patches.youtube.utils.extension.Constants.COMPONENTS_PATH
@@ -32,6 +32,7 @@ import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
 import app.morphe.util.indexOfFirstStringInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.builder.MutableMethodImplementation
@@ -136,11 +137,13 @@ val playerTypeHookPatch = bytecodePatch(
         val videoStateMatch = videoStateFingerprint.matchOrThrow()
         val videoStateMethod = videoStateMatch.method
         val videoStateClassDef = videoStateMatch.classDef
-        val videoStateMutableMethod = proxy(videoStateClassDef).mutableClass.methods.first {
+        // ✅ Morphe: mutableClassDefBy con classDef directamente
+        val videoStateMutableMethod = mutableClassDefBy(videoStateClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, videoStateMethod)
         }
         videoStateMutableMethod.apply {
-            val endIndex = videoStateMatch.patternMatch!!.startIndex + 1
+            // ✅ Morphe: instructionMatches en lugar de patternMatch
+            val endIndex = videoStateMatch.instructionMatches.first().index + 1
             val videoStateFieldName =
                 getInstruction<ReferenceInstruction>(endIndex).reference
 
@@ -166,39 +169,39 @@ val playerTypeHookPatch = bytecodePatch(
                 ?.definingClass
                 ?: throw PatchException("Could not find browseId class")
 
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(targetClass)
-                val classDef = classes.find { it.type == targetClass }
-                    ?: throw PatchException("Class not found: $targetClass")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                mutableMethod.apply {
-                    val browseIdFieldReference = getInstruction<ReferenceInstruction>(
-                        indexOfFirstInstructionOrThrow(Opcode.IPUT_OBJECT)
-                    ).reference
-                    val browseIdFieldName = (browseIdFieldReference as FieldReference).name
+            // ✅ Morphe: obtener método y clase mutable
+            val method = findMethodOrThrow(targetClass)
+            // ✅ Morphe: usar classDefs en lugar de classes
+            val classDef = classDefs.find { it.type == targetClass }
+                ?: throw PatchException("Class not found: $targetClass")
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val browseIdFieldReference = getInstruction<ReferenceInstruction>(
+                    indexOfFirstInstructionOrThrow(Opcode.IPUT_OBJECT)
+                ).reference
+                val browseIdFieldName = (browseIdFieldReference as FieldReference).name
 
-                    val smaliInstructions =
+                val smaliInstructions =
+                    """
+                        if-eqz v0, :ignore
+                        iget-object v0, v0, $definingClass->$browseIdFieldName:Ljava/lang/String;
+                        if-eqz v0, :ignore
+                        return-object v0
+                        :ignore
+                        const-string v0, ""
+                        return-object v0
                         """
-                            if-eqz v0, :ignore
-                            iget-object v0, v0, $definingClass->$browseIdFieldName:Ljava/lang/String;
-                            if-eqz v0, :ignore
-                            return-object v0
-                            :ignore
-                            const-string v0, ""
-                            return-object v0
-                            """
 
-                    addStaticFieldToExtension(
-                        EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
-                        "getBrowseId",
-                        "browseIdClass",
-                        definingClass,
-                        smaliInstructions
-                    )
-                }
+                addStaticFieldToExtension(
+                    EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
+                    "getBrowseId",
+                    "browseIdClass",
+                    definingClass,
+                    smaliInstructions
+                )
             }
         }
 
@@ -212,17 +215,18 @@ val playerTypeHookPatch = bytecodePatch(
                 getInstruction<ReferenceInstruction>(searchQueryIndex).reference
             val searchQueryClass = (searchQueryFieldReference as FieldReference).definingClass
 
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(searchQueryClass)
-                val classDef = classes.find { it.type == searchQueryClass }
-                    ?: throw PatchException("Class not found: $searchQueryClass")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                mutableMethod.apply {
-                    val smaliInstructions =
-                        """
+            // ✅ Morphe: obtener método y clase mutable
+            val method = findMethodOrThrow(searchQueryClass)
+            // ✅ Morphe: usar classDefs en lugar de classes
+            val classDef = classDefs.find { it.type == searchQueryClass }
+                ?: throw PatchException("Class not found: $searchQueryClass")
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val smaliInstructions =
+                    """
                         if-eqz v0, :ignore
                         iget-object v0, v0, $searchQueryFieldReference
                         if-eqz v0, :ignore
@@ -232,14 +236,13 @@ val playerTypeHookPatch = bytecodePatch(
                         return-object v0
                         """
 
-                    addStaticFieldToExtension(
-                        EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
-                        "getSearchQuery",
-                        "searchQueryClass",
-                        definingClass,
-                        smaliInstructions
-                    )
-                }
+                addStaticFieldToExtension(
+                    EXTENSION_ROOT_VIEW_HOOK_CLASS_DESCRIPTOR,
+                    "getSearchQuery",
+                    "searchQueryClass",
+                    definingClass,
+                    smaliInstructions
+                )
             }
         }
 
