@@ -12,7 +12,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.youtube.utils.extension.Constants.EXTENSION_PATH
 import app.morphe.patches.youtube.utils.extension.sharedExtensionPatch
 import app.morphe.util.addStaticFieldToExtension
@@ -23,6 +23,7 @@ import app.morphe.util.getWalkerMethod
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
@@ -80,44 +81,44 @@ val dismissPlayerHookPatch = bytecodePatch(
             val fieldReference =
                 getInstruction<ReferenceInstruction>(fieldIndex).reference as FieldReference
 
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(fieldReference.definingClass)
-                val classDef = classes.find { it.type == fieldReference.definingClass }
-                    ?: throw PatchException("Class not found: ${fieldReference.definingClass}")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
+            // ✅ Morphe: obtener método y clase mutable
+            val method = findMethodOrThrow(fieldReference.definingClass)
+            // ✅ Morphe: usar classDefs en lugar de classes
+            val classDef = classDefs.find { it.type == fieldReference.definingClass }
+                ?: throw PatchException("Class not found: ${fieldReference.definingClass}")
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val insertIndex = indexOfFirstInstructionOrThrow {
+                    opcode == Opcode.IPUT_OBJECT &&
+                            getReference<FieldReference>() == fieldReference
                 }
-                mutableMethod.apply {
-                    val insertIndex = indexOfFirstInstructionOrThrow {
-                        opcode == Opcode.IPUT_OBJECT &&
-                                getReference<FieldReference>() == fieldReference
-                    }
-                    val insertRegister =
-                        getInstruction<TwoRegisterInstruction>(insertIndex).registerA
+                val insertRegister =
+                    getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
-                    addInstruction(
-                        insertIndex,
-                        "sput-object v$insertRegister, $EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR->dismissPlayerClass:$dismissPlayerClass"
-                    )
+                addInstruction(
+                    insertIndex,
+                    "sput-object v$insertRegister, $EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR->dismissPlayerClass:$dismissPlayerClass"
+                )
 
-                    val smaliInstructions =
-                        """
+                val smaliInstructions =
+                    """
                         if-eqz v0, :ignore
                         invoke-virtual {v0}, $dismissPlayerReference
                         :ignore
                         return-void
                         """
 
-                    addStaticFieldToExtension(
-                        EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR,
-                        "dismissPlayer",
-                        "dismissPlayerClass",
-                        dismissPlayerClass,
-                        smaliInstructions,
-                        false
-                    )
-                }
+                addStaticFieldToExtension(
+                    EXTENSION_VIDEO_UTILS_CLASS_DESCRIPTOR,
+                    "dismissPlayer",
+                    "dismissPlayerClass",
+                    dismissPlayerClass,
+                    smaliInstructions,
+                    false
+                )
             }
         }
     }
