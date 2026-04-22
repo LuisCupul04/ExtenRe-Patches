@@ -11,7 +11,7 @@ package app.morphe.patches.shared.dialog
 import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.util.fingerprint.matchOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
@@ -34,7 +34,8 @@ fun baseViewerDiscretionDialogPatch(
 
         if (isAgeVerified) {
             ageVerifiedFingerprint.matchOrThrow().let {
-                it.getWalkerMethod(it.patternMatch!!.endIndex - 1)
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                it.getWalkerMethod(it.instructionMatches.last().index - 1)
                     .invoke(classDescriptor, "confirmDialogAgeVerified")
             }
         }
@@ -52,4 +53,3 @@ private fun MutableMethod.invoke(classDescriptor: String, methodName: String) {
         "invoke-static { v$dialogRegister }, $classDescriptor->$methodName(Landroid/app/AlertDialog;)V"
     )
 }
-
