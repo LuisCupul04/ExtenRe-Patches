@@ -27,6 +27,7 @@ import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstStringInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -71,13 +72,15 @@ val ambientModeSwitchPatch = bytecodePatch(
         }
 
         syntheticClassList.distinct().forEach { className ->
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
+            // ✅ Morphe: obtener método y clase mutable
             val method = findMethodOrThrow(className) {
                 name == "accept"
             }
-            val classDef = classes.find { it.type == className }
+            // ✅ Morphe: usar classDefs en lugar de classes
+            val classDef = classDefs.find { it.type == className }
                 ?: throw PatchException("Class not found: $className")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
