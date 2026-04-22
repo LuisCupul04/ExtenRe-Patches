@@ -40,7 +40,8 @@ fun baseOpusCodecsPatch() = bytecodePatch(
         codecSelectorFingerprint.matchOrThrow().let {
             it.method.apply {
                 val freeRegister = implementation!!.registerCount - parameters.size - 2
-                val targetIndex = it.patternMatch!!.endIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val targetIndex = it.instructionMatches.last().index
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
                 addInstructionsWithLabels(
@@ -56,4 +57,3 @@ fun baseOpusCodecsPatch() = bytecodePatch(
         }
     }
 }
-
