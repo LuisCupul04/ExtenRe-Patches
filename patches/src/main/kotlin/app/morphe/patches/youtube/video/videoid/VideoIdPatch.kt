@@ -12,7 +12,7 @@ import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.youtube.utils.playertype.playerTypeHookPatch
 import app.morphe.patches.youtube.video.playerresponse.Hook
 import app.morphe.patches.youtube.video.playerresponse.addPlayerResponseMethodHook
@@ -37,7 +37,8 @@ val videoIdPatch = bytecodePatch(
          */
         fun Pair<String, Fingerprint>.setFields(consumer: (MutableMethod, Int, Int) -> Unit) =
             matchOrThrow().let { result ->
-                val videoIdRegisterIndex = result.patternMatch!!.endIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val videoIdRegisterIndex = result.instructionMatches.last().index
 
                 result.method.let {
                     val videoIdRegister =
