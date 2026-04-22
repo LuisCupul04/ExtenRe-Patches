@@ -13,18 +13,19 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLa
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.reddit.utils.compatibility.Constants.COMPATIBLE_PACKAGE
 import app.morphe.patches.reddit.utils.extension.Constants.PATCHES_PATH
 import app.morphe.patches.reddit.utils.patch.PatchList.HIDE_ADS
 import app.morphe.patches.reddit.utils.settings.is_2025_06_or_greater
 import app.morphe.patches.reddit.utils.settings.settingsPatch
 import app.morphe.patches.reddit.utils.settings.updatePatchStatus
-import app.morphe.util.findMutableMethodOf
+import app.morphe.util.fingerprint.matchOrNull
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstStringInstruction
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.iface.Method
@@ -63,7 +64,7 @@ val adsPatch = bytecodePatch(
         // The new feeds work by inserting posts into lists.
         // AdElementConverter is conveniently responsible for inserting all feed ads.
         // By removing the appending instruction no ad posts gets appended to the feed.
-        val newAdPostMethod = newAdPostFingerprint.second.methodOrNull
+        val newAdPostMethod = newAdPostFingerprint.second.matchOrNull()?.method
             ?: newAdPostLegacyFingerprint.mutableMethodOrThrow()
 
         newAdPostMethod.apply {
@@ -108,13 +109,14 @@ val adsPatch = bytecodePatch(
                         indexOfFirstStringInstruction("ad") >= 0
             }
 
-            classes.forEach { classDef ->
+            // ✅ Morphe: usar classDefs en lugar de classes
+            classDefs.forEach { classDef ->
                 classDef.methods.forEach { method ->
                     if (method.isCommentAdsMethod()) {
-                        proxy(classDef)
-                            .mutableClass
-                            .findMutableMethodOf(method)
-                            .hook()
+                        // ✅ Morphe: obtener clase mutable directamente
+                        mutableClassDefBy(classDef).methods
+                            .find { it.name == method.name && it.parameterTypes == method.parameterTypes }
+                            ?.hook()
                     }
                 }
             }
