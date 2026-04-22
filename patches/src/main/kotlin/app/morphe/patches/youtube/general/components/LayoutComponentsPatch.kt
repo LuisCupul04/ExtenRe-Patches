@@ -159,7 +159,8 @@ val layoutComponentsPatch = bytecodePatch(
         // for tablet and old clients
         accountMenuFingerprint.matchOrThrow(accountMenuParentFingerprint).let {
             it.method.apply {
-                val targetIndex = it.patternMatch!!.startIndex + 2
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val targetIndex = it.instructionMatches.first().index + 2
                 val targetInstruction = getInstruction<FiveRegisterInstruction>(targetIndex)
 
                 addInstruction(
