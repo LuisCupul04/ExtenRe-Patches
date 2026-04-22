@@ -14,7 +14,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.resourcePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.youtube.utils.extension.Constants.UTILS_PATH
 import app.morphe.patches.youtube.utils.extension.sharedExtensionPatch
 import app.morphe.patches.youtube.utils.playservice.is_19_25_or_greater
@@ -182,7 +182,8 @@ val playerControlsPatch = bytecodePatch(
     execute {
         playerControlsVisibilityEntityModelFingerprint.matchOrThrow().let {
             it.method.apply {
-                val startIndex = it.patternMatch!!.startIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val startIndex = it.instructionMatches.first().index
                 val iGetReference = getInstruction<ReferenceInstruction>(startIndex).reference
                 val staticReference = getInstruction<ReferenceInstruction>(startIndex + 1).reference
 
