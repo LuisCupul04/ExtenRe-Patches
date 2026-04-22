@@ -13,7 +13,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.shared.authenticationChangeListenerFingerprint
 import app.morphe.patches.shared.clientTypeFingerprint
 import app.morphe.patches.shared.indexOfClientInfoInstruction
@@ -66,7 +66,8 @@ val spoofClientBrowseEndpointPatch = bytecodePatch(
             .matchOrThrow(browseEndpointConstructorFingerprint)
             .let {
                 it.method.apply {
-                    val browseIdIndex = it.patternMatch!!.startIndex
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val browseIdIndex = it.instructionMatches.first().index
 
                     browseIdField =
                         getInstruction<ReferenceInstruction>(browseIdIndex).reference as FieldReference
@@ -117,4 +118,3 @@ internal fun addClientInfoHook(
         )
     }
 }
-
