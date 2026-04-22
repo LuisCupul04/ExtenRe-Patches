@@ -46,8 +46,9 @@ val themeAttributesPatch = bytecodePatch(
          */
         setSleepTimerDrawableFingerprint.matchOrThrow().let {
             it.method.apply {
-                val getResourcesIndex = it.patternMatch!!.startIndex
-                val getDrawableIndex = it.patternMatch!!.endIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val getResourcesIndex = it.instructionMatches.first().index
+                val getDrawableIndex = it.instructionMatches.last().index
 
                 // Verify that the correct pattern has been found.
                 referenceMatchesOrThrow(
