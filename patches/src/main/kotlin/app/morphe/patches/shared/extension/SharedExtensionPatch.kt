@@ -16,7 +16,7 @@ import app.morphe.patcher.fingerprint
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.encodedValue.MutableLongEncodedValue
+import app.morphe.patcher.util.mutableTypes.encodedValue.MutableLongEncodedValue
 import app.morphe.patches.shared.extension.Constants.EXTENSION_PATCH_STATUS_CLASS_DESCRIPTOR
 import app.morphe.patches.shared.extension.Constants.EXTENSION_UTILS_CLASS_DESCRIPTOR
 import app.morphe.util.findMethodsOrThrow
@@ -33,7 +33,8 @@ fun sharedExtensionPatch(
     extendWith("extensions/shared.mpe")
 
     execute {
-        if (classes.none { EXTENSION_UTILS_CLASS_DESCRIPTOR == it.type }) {
+        // ✅ Morphe: usar classDefs en lugar de classes
+        if (classDefs.none { EXTENSION_UTILS_CLASS_DESCRIPTOR == it.type }) {
             throw PatchException(
                 "Shared extension has not been merged yet. This patch can not succeed without merging it.",
             )
