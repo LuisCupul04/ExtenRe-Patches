@@ -18,7 +18,7 @@ import app.morphe.patcher.patch.booleanOption
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.resourcePatch
 import app.morphe.patcher.patch.stringOption
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.shared.drawable.addDrawableColorHook
 import app.morphe.patches.shared.drawable.drawableColorHookPatch
@@ -39,6 +39,7 @@ import app.morphe.util.getNode
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.valueOrThrow
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
@@ -80,11 +81,13 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
         val bottomUiContainerPreMatch = bottomUiContainerPreFingerprint.matchOrThrow()
         val bottomUiContainerPreMethod = bottomUiContainerPreMatch.method
         val bottomUiContainerPreClassDef = bottomUiContainerPreMatch.classDef
-        val bottomUiContainerPreMutableMethod = proxy(bottomUiContainerPreClassDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val bottomUiContainerPreMutableMethod = mutableClassDefBy(bottomUiContainerPreClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, bottomUiContainerPreMethod)
         }
         bottomUiContainerPreMutableMethod.apply {
-            val insertIndex = bottomUiContainerPreMatch.patternMatch!!.startIndex + 1
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val insertIndex = bottomUiContainerPreMatch.instructionMatches.first().index + 1
 
             addInstruction(
                 insertIndex,
@@ -95,11 +98,13 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
         val bottomUiContainerThemeMatch = bottomUiContainerThemeFingerprint.matchOrThrow()
         val bottomUiContainerThemeMethod = bottomUiContainerThemeMatch.method
         val bottomUiContainerThemeClassDef = bottomUiContainerThemeMatch.classDef
-        val bottomUiContainerThemeMutableMethod = proxy(bottomUiContainerThemeClassDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val bottomUiContainerThemeMutableMethod = mutableClassDefBy(bottomUiContainerThemeClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, bottomUiContainerThemeMethod)
         }
         bottomUiContainerThemeMutableMethod.apply {
-            val darkThemeIndex = bottomUiContainerThemeMatch.patternMatch!!.startIndex + 2
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val darkThemeIndex = bottomUiContainerThemeMatch.instructionMatches.first().index + 2
             val darkThemeReference =
                 getInstruction<ReferenceInstruction>(darkThemeIndex).reference.toString()
 
@@ -163,41 +168,41 @@ private val snackBarComponentsBytecodePatch = bytecodePatch(
                     setBackground(index + 1, register)
                 }
 
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(definingClass)
-                val classDef = classes.find { it.type == definingClass }
-                    ?: throw PatchException("Class not found: $definingClass")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
+            // ✅ Morphe: obtener método mutable correctamente
+            val method = findMethodOrThrow(definingClass)
+            // ✅ Morphe: usar classDefs en lugar de classes
+            val classDef = classDefs.find { it.type == definingClass }
+                ?: throw PatchException("Class not found: $definingClass")
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val contextIndex = indexOfFirstInstructionOrThrow {
+                    opcode == Opcode.IPUT_OBJECT &&
+                            getReference<FieldReference>()?.type == "Landroid/content/Context;"
                 }
-                mutableMethod.apply {
-                    val contextIndex = indexOfFirstInstructionOrThrow {
-                        opcode == Opcode.IPUT_OBJECT &&
-                                getReference<FieldReference>()?.type == "Landroid/content/Context;"
-                    }
-                    val contextRegister =
-                        getInstruction<TwoRegisterInstruction>(contextIndex).registerA
+                val contextRegister =
+                    getInstruction<TwoRegisterInstruction>(contextIndex).registerA
 
-                    addInstructions(
-                        contextIndex, """
+                addInstructions(
+                    contextIndex, """
                         invoke-static {v$contextRegister}, $EXTENSION_CLASS_DESCRIPTOR->invertSnackBarTheme(Landroid/content/Context;)Landroid/content/Context;
                         move-result-object v$contextRegister
                         """
-                    )
+                )
 
-                    val viewIndex = indexOfFirstInstructionOrThrow {
-                        opcode == Opcode.IPUT_OBJECT &&
-                                getReference<FieldReference>()?.type == "Landroid/widget/FrameLayout;"
-                    }
-                    val viewRegister =
-                        getInstruction<TwoRegisterInstruction>(viewIndex).registerA
-
-                    addInstructions(
-                        viewIndex,
-                        "invoke-static {v$viewRegister}, $EXTENSION_CLASS_DESCRIPTOR->hideLithoSnackBar(Landroid/widget/FrameLayout;)V"
-                    )
+                val viewIndex = indexOfFirstInstructionOrThrow {
+                    opcode == Opcode.IPUT_OBJECT &&
+                            getReference<FieldReference>()?.type == "Landroid/widget/FrameLayout;"
                 }
+                val viewRegister =
+                    getInstruction<TwoRegisterInstruction>(viewIndex).registerA
+
+                addInstructions(
+                    viewIndex,
+                    "invoke-static {v$viewRegister}, $EXTENSION_CLASS_DESCRIPTOR->hideLithoSnackBar(Landroid/widget/FrameLayout;)V"
+                )
             }
         }
 
