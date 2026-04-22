@@ -14,8 +14,8 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.BytecodePatchBuilder
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableField.Companion.toMutable
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableField.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.shared.AUDIO_TRACK_DISPLAY_NAME_STRING
 import app.morphe.patches.shared.AUDIO_TRACK_ID_STRING
 import app.morphe.patches.shared.IS_DEFAULT_AUDIO_TRACK_STRING
@@ -25,6 +25,7 @@ import app.morphe.util.findMethodFromToString
 import app.morphe.util.fingerprint.injectLiteralInstructionBooleanCall
 import app.morphe.util.fingerprint.originalMethodOrThrow
 import app.morphe.util.indexOfFirstInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.builder.MutableMethodImplementation
@@ -68,9 +69,13 @@ internal fun audioTracksPatch(
         val audioTrackIdMethod = toStringMethod
             .findMethodFromToString(AUDIO_TRACK_ID_STRING)
 
-        proxy(classes.first {
+        // ✅ Morphe: obtener clase mutable directamente
+        val targetClassDef = classDefs.first {
             it.type == audioTrackIdMethod.definingClass
-        }).mutableClass.apply {
+        }
+        val mutableClass = mutableClassDefBy(targetClassDef)
+
+        mutableClass.apply {
             // Add a new field to store the override.
             val helperFieldName = "isDefaultAudioTrackOverride"
             fields.add(
