@@ -13,10 +13,11 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.shared.extension.Constants.PATCHES_PATH
 import app.morphe.util.fingerprint.matchOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -44,11 +45,13 @@ val baseSanitizeUrlQueryPatch = bytecodePatch(
         val copyTextMatch = copyTextEndpointFingerprint.matchOrThrow()
         val method = copyTextMatch.method
         val classDef = copyTextMatch.classDef
-        val mutableMethod = proxy(classDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, method)
         }
         mutableMethod.apply {
-            val targetIndex = copyTextMatch.patternMatch!!.startIndex
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val targetIndex = copyTextMatch.instructionMatches.first().index
             val targetRegister = getInstruction<TwoRegisterInstruction>(targetIndex).registerA
 
             addInstructions(
