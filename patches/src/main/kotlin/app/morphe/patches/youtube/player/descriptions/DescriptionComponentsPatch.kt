@@ -13,6 +13,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLa
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.shared.litho.addLithoFilter
 import app.morphe.patches.shared.litho.lithoFilterPatch
@@ -82,7 +83,8 @@ val descriptionComponentsPatch = bytecodePatch(
             ).let {
                 it.method.apply {
                     val freeRegister = implementation!!.registerCount - parameters.size - 2
-                    val imageSpanIndex = it.patternMatch!!.startIndex
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val imageSpanIndex = it.instructionMatches.first().index
                     val setTextIndex = indexOfFirstInstructionOrThrow {
                         opcode == Opcode.INVOKE_VIRTUAL &&
                                 getReference<MethodReference>()?.name == "setText"
