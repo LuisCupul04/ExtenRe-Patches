@@ -6,31 +6,31 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-package com.extenre.patches.youtube.utils
+package app.morphe.patches.youtube.utils
 
-import com.extenre.patches.youtube.player.components.playerComponentsPatch
-import com.extenre.patches.youtube.utils.resourceid.autoNavPreviewStub
-import com.extenre.patches.youtube.utils.resourceid.autoNavToggle
-import com.extenre.patches.youtube.utils.resourceid.fadeDurationFast
-import com.extenre.patches.youtube.utils.resourceid.inlineTimeBarColorizedBarPlayedColorDark
-import com.extenre.patches.youtube.utils.resourceid.inlineTimeBarPlayedNotHighlightedColor
-import com.extenre.patches.youtube.utils.resourceid.insetOverlayViewLayout
-import com.extenre.patches.youtube.utils.resourceid.menuItemView
-import com.extenre.patches.youtube.utils.resourceid.playerControlNextButtonTouchArea
-import com.extenre.patches.youtube.utils.resourceid.playerControlPreviousButtonTouchArea
-import com.extenre.patches.youtube.utils.resourceid.scrimOverlay
-import com.extenre.patches.youtube.utils.resourceid.seekUndoEduOverlayStub
-import com.extenre.patches.youtube.utils.resourceid.settingsFragment
-import com.extenre.patches.youtube.utils.resourceid.settingsFragmentCairo
-import com.extenre.patches.youtube.utils.resourceid.totalTime
-import com.extenre.patches.youtube.utils.resourceid.varispeedUnavailableTitle
-import com.extenre.patches.youtube.utils.resourceid.videoQualityBottomSheet
-import com.extenre.patches.youtube.utils.sponsorblock.sponsorBlockBytecodePatch
-import com.extenre.util.containsLiteralInstruction
-import com.extenre.util.fingerprint.legacyFingerprint
-import com.extenre.util.getReference
-import com.extenre.util.indexOfFirstInstruction
-import com.extenre.util.or
+import app.morphe.patches.youtube.player.components.playerComponentsPatch
+import app.morphe.patches.youtube.utils.resourceid.autoNavPreviewStub
+import app.morphe.patches.youtube.utils.resourceid.autoNavToggle
+import app.morphe.patches.youtube.utils.resourceid.fadeDurationFast
+import app.morphe.patches.youtube.utils.resourceid.inlineTimeBarColorizedBarPlayedColorDark
+import app.morphe.patches.youtube.utils.resourceid.inlineTimeBarPlayedNotHighlightedColor
+import app.morphe.patches.youtube.utils.resourceid.insetOverlayViewLayout
+import app.morphe.patches.youtube.utils.resourceid.menuItemView
+import app.morphe.patches.youtube.utils.resourceid.playerControlNextButtonTouchArea
+import app.morphe.patches.youtube.utils.resourceid.playerControlPreviousButtonTouchArea
+import app.morphe.patches.youtube.utils.resourceid.scrimOverlay
+import app.morphe.patches.youtube.utils.resourceid.seekUndoEduOverlayStub
+import app.morphe.patches.youtube.utils.resourceid.settingsFragment
+import app.morphe.patches.youtube.utils.resourceid.settingsFragmentCairo
+import app.morphe.patches.youtube.utils.resourceid.totalTime
+import app.morphe.patches.youtube.utils.resourceid.varispeedUnavailableTitle
+import app.morphe.patches.youtube.utils.resourceid.videoQualityBottomSheet
+import app.morphe.patches.youtube.utils.sponsorblock.sponsorBlockBytecodePatch
+import app.morphe.util.containsLiteralInstruction
+import app.morphe.util.fingerprint.legacyFingerprint
+import app.morphe.util.getReference
+import app.morphe.util.indexOfFirstInstruction
+import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
