@@ -29,7 +29,8 @@ private val overlayFilterBytecodePatch = bytecodePatch(
     execute {
         designBottomSheetDialogFingerprint.matchOrThrow().let {
             it.method.apply {
-                val insertIndex = it.patternMatch!!.endIndex - 1
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val insertIndex = it.instructionMatches.last().index - 1
                 val freeRegister = getInstruction<OneRegisterInstruction>(insertIndex + 1).registerA
 
                 addInstructions(
@@ -49,7 +50,7 @@ private val overlayFilterBytecodePatch = bytecodePatch(
 val overlayFilterPatch = resourcePatch(
     HIDE_OVERLAY_FILTER.title,
     HIDE_OVERLAY_FILTER.summary,
-    use = false,
+    defaultEnable = false,   // ✅ Cambiado de 'use = false'
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
