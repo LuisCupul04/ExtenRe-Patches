@@ -43,6 +43,7 @@ import app.morphe.util.copyXmlNode
 import app.morphe.util.fingerprint.matchOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.indexOfFirstInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.removeStringsElements
 import app.morphe.util.valueOrThrow
 import com.android.tools.smali.dexlib2.Opcode
@@ -91,11 +92,13 @@ private val settingsBytecodePatch = bytecodePatch(
         settingsHeadersFragmentFingerprint.matchOrThrow().let {
             val method = it.method
             val classDef = it.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: usar mutableClassDefBy con classDef directamente
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val targetIndex = it.patternMatch!!.endIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val targetIndex = it.instructionMatches.last().index
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
                 addInstruction(
@@ -112,11 +115,13 @@ private val settingsBytecodePatch = bytecodePatch(
         preferenceFingerprint.matchOrThrow().let {
             val method = it.method
             val classDef = it.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: usar mutableClassDefBy con classDef directamente
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val targetIndex = it.patternMatch!!.endIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val targetIndex = it.instructionMatches.last().index
                 val keyRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerD
                 val valueRegister = getInstruction<FiveRegisterInstruction>(targetIndex).registerE
 
