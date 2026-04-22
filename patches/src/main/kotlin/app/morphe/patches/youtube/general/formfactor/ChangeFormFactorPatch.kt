@@ -97,7 +97,8 @@ val changeFormFactorPatch = bytecodePatch(
 
         widthDpUIFingerprint.matchOrThrow().let {
             it.method.apply {
-                val index = it.patternMatch!!.startIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val index = it.instructionMatches.first().index
                 val register = getInstruction<OneRegisterInstruction>(index).registerA
 
                 addInstructions(
