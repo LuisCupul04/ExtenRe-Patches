@@ -12,7 +12,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.youtube.utils.extension.Constants.EXTENSION_PATH
 import app.morphe.patches.youtube.utils.extension.sharedExtensionPatch
 import app.morphe.patches.youtube.utils.playservice.is_20_02_or_greater
@@ -24,6 +24,7 @@ import app.morphe.util.getReference
 import app.morphe.util.getWalkerMethod
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -73,11 +74,13 @@ val fullscreenButtonHookPatch = bytecodePatch(
                                 Opcode.NEW_INSTANCE
                             )
                         ).reference.toString()
-                        // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                        // ✅ Morphe: obtener método y clase mutable
                         val method = findMethodOrThrow(animatorListenerAdapterClass) { parameters.isEmpty() }
-                        val classDef = classes.find { it.type == animatorListenerAdapterClass }
+                        // ✅ Morphe: usar classDefs en lugar de classes
+                        val classDef = classDefs.find { it.type == animatorListenerAdapterClass }
                             ?: throw PatchException("Class not found: $animatorListenerAdapterClass")
-                        val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+                        val mutableMethod = mutableClassDefBy(classDef).methods.first {
                             MethodUtil.methodSignaturesMatch(it, method)
                         }
                         return Pair(mutableMethod, fullscreenActionClass)
@@ -85,11 +88,13 @@ val fullscreenButtonHookPatch = bytecodePatch(
                 } else {
                     val animatorListenerClass =
                         (getInstruction<ReferenceInstruction>(methodIndex).reference as MethodReference).definingClass
-                    // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                    // ✅ Morphe: obtener método y clase mutable
                     val method = findMethodOrThrow(animatorListenerClass) { parameters == listOf("I") }
-                    val classDef = classes.find { it.type == animatorListenerClass }
+                    // ✅ Morphe: usar classDefs en lugar de classes
+                    val classDef = classDefs.find { it.type == animatorListenerClass }
                         ?: throw PatchException("Class not found: $animatorListenerClass")
-                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+                    val mutableMethod = mutableClassDefBy(classDef).methods.first {
                         MethodUtil.methodSignaturesMatch(it, method)
                     }
                     return Pair(mutableMethod, fullscreenActionClass)
@@ -124,15 +129,16 @@ val fullscreenButtonHookPatch = bytecodePatch(
                     (enterFullscreenReference as MethodReference).definingClass
 
                 if (opcode == Opcode.INVOKE_INTERFACE) {
-                    classes.forEach { classDef ->
+                    // ✅ Morphe: usar classDefs en lugar de classes
+                    classDefs.forEach { classDef ->
                         if (enterFullscreenMethods.size >= 2)
                             return@forEach
                         if (!classDef.interfaces.contains(enterFullscreenClass))
                             return@forEach
 
+                        // ✅ Morphe: obtener clase mutable directamente
                         val enterFullscreenMethod =
-                            proxy(classDef)
-                                .mutableClass
+                            mutableClassDefBy(classDef)
                                 .methods
                                 .find { method -> method.name == enterFullscreenReference.name }
                                 ?: throw PatchException("No matching classes: $enterFullscreenClass")
@@ -140,13 +146,15 @@ val fullscreenButtonHookPatch = bytecodePatch(
                         enterFullscreenMethods.add(enterFullscreenMethod)
                     }
                 } else {
-                    // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                    // ✅ Morphe: obtener método y clase mutable
                     val method = findMethodOrThrow(enterFullscreenClass) {
                         name == enterFullscreenReference.name
                     }
-                    val classDef = classes.find { it.type == enterFullscreenClass }
+                    // ✅ Morphe: usar classDefs en lugar de classes
+                    val classDef = classDefs.find { it.type == enterFullscreenClass }
                         ?: throw PatchException("Class not found: $enterFullscreenClass")
-                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+                    val mutableMethod = mutableClassDefBy(classDef).methods.first {
                         MethodUtil.methodSignaturesMatch(it, method)
                     }
                     enterFullscreenMethods.add(mutableMethod)
