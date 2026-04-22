@@ -16,7 +16,7 @@ import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.resourcePatch
 import app.morphe.patcher.patch.stringOption
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.shared.extension.Constants.EXTENSION_THEME_UTILS_CLASS_DESCRIPTOR
 import app.morphe.patches.shared.extension.Constants.EXTENSION_UTILS_CLASS_DESCRIPTOR
 import app.morphe.patches.shared.mainactivity.injectConstructorMethodCall
@@ -57,6 +57,7 @@ import app.morphe.util.hookClassHierarchy
 import app.morphe.util.indexOfFirstInstruction
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.insertNode
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.removeStringsElements
 import app.morphe.util.returnEarly
 import app.morphe.util.valueOrThrow
@@ -178,18 +179,18 @@ private val settingsBytecodePatch = bytecodePatch(
         }
 
         targetActivityClassName = targetActivityClass.type.className
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
-                name == "TargetActivityClass"
-            }
-            val classDef = classes.find { it.type == PATCH_STATUS_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $PATCH_STATUS_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.returnEarly(targetActivityClassName)
+        // ✅ Morphe: obtener clase mutable correctamente
+        val method = findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
+            name == "TargetActivityClass"
         }
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val classDef = classDefs.find { it.type == PATCH_STATUS_CLASS_DESCRIPTOR }
+            ?: throw PatchException("Class not found: $PATCH_STATUS_CLASS_DESCRIPTOR")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.returnEarly(targetActivityClassName)
 
         // apply the current theme of the settings page
         themeSetterSystemFingerprint.mutableMethodOrThrow().apply {
