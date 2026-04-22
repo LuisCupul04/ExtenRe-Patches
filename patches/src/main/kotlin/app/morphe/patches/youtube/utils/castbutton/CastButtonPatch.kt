@@ -17,7 +17,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.removeInstruction
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patches.youtube.utils.extension.Constants.GENERAL_CLASS_DESCRIPTOR
 import app.morphe.patches.youtube.utils.extension.Constants.PATCH_STATUS_CLASS_DESCRIPTOR
 import app.morphe.patches.youtube.utils.extension.Constants.PLAYER_CLASS_DESCRIPTOR
@@ -27,6 +27,7 @@ import app.morphe.util.findMethodOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.updatePatchStatus
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -53,23 +54,23 @@ val castButtonPatch = bytecodePatch(
 
         playerButtonMethod = playerButtonFingerprint.mutableMethodOrThrow()
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow("Landroidx/mediarouter/app/MediaRouteButton;") {
-                name == "setVisibility"
-            }
-            val classDef = classes.find { it.type == "Landroidx/mediarouter/app/MediaRouteButton;" }
-                ?: throw PatchException("Class not found: Landroidx/mediarouter/app/MediaRouteButton;")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.addInstructions(
-                0, """
+        // ✅ Morphe: obtener método y clase mutable correctamente
+        val method = findMethodOrThrow("Landroidx/mediarouter/app/MediaRouteButton;") {
+            name == "setVisibility"
+        }
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val classDef = classDefs.find { it.type == "Landroidx/mediarouter/app/MediaRouteButton;" }
+            ?: throw PatchException("Class not found: Landroidx/mediarouter/app/MediaRouteButton;")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.addInstructions(
+            0, """
                     invoke-static {p1}, $EXTENSION_CLASS_DESCRIPTOR->hideCastButton(I)I
                     move-result p1
                     """
-            )
-        }
+        )
     }
 }
 
