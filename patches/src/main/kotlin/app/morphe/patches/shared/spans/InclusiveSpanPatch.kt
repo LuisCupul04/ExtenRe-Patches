@@ -14,8 +14,8 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.shared.extension.Constants.SPANS_PATH
 import app.morphe.patches.shared.indexOfSpannableStringInstruction
 import app.morphe.patches.shared.spannableStringBuilderFingerprint
@@ -30,6 +30,7 @@ import app.morphe.util.getReference
 import app.morphe.util.getWalkerMethod
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -94,27 +95,27 @@ val inclusiveSpanPatch = bytecodePatch(
             val customCharacterStyle =
                 customCharacterStyleFingerprint.mutableClassOrThrow().type
 
-            // Reemplazar findmutableMethodOrThrow por búsqueda manual
-            run {
-                val method = findMethodOrThrow(EXTENSION_SPANS_CLASS_DESCRIPTOR) {
-                    name == "getSpanType" && returnType != "Ljava/lang/String;"
+            // ✅ Morphe: obtener clase mutable correctamente
+            val method = findMethodOrThrow(EXTENSION_SPANS_CLASS_DESCRIPTOR) {
+                name == "getSpanType" && returnType != "Ljava/lang/String;"
+            }
+            // ✅ Morphe: usar classDefs en lugar de classes
+            val classDef = classDefs.find { it.type == EXTENSION_SPANS_CLASS_DESCRIPTOR }
+                ?: throw PatchException("Class not found: $EXTENSION_SPANS_CLASS_DESCRIPTOR")
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
+                MethodUtil.methodSignaturesMatch(it, method)
+            }
+            mutableMethod.apply {
+                val index = indexOfFirstInstructionOrThrow {
+                    opcode == Opcode.INSTANCE_OF &&
+                            (this as? ReferenceInstruction)?.reference?.toString() == "Landroid/text/style/CharacterStyle;"
                 }
-                val classDef = classes.find { it.type == EXTENSION_SPANS_CLASS_DESCRIPTOR }
-                    ?: throw PatchException("Class not found: $EXTENSION_SPANS_CLASS_DESCRIPTOR")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                    MethodUtil.methodSignaturesMatch(it, method)
-                }
-                mutableMethod.apply {
-                    val index = indexOfFirstInstructionOrThrow {
-                        opcode == Opcode.INSTANCE_OF &&
-                                (this as? ReferenceInstruction)?.reference?.toString() == "Landroid/text/style/CharacterStyle;"
-                    }
-                    val instruction = getInstruction<TwoRegisterInstruction>(index)
-                    replaceInstruction(
-                        index,
-                        "instance-of v${instruction.registerA}, v${instruction.registerB}, $customCharacterStyle"
-                    )
-                }
+                val instruction = getInstruction<TwoRegisterInstruction>(index)
+                replaceInstruction(
+                    index,
+                    "instance-of v${instruction.registerA}, v${instruction.registerB}, $customCharacterStyle"
+                )
             }
 
             // Create a new method to get the filter array to avoid register conflicts.
