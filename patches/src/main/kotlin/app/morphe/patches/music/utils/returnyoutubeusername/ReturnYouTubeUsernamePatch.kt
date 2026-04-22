@@ -24,7 +24,7 @@ import app.morphe.patches.shared.returnyoutubeusername.baseReturnYouTubeUsername
 val returnYouTubeUsernamePatch = resourcePatch(
     name = RETURN_YOUTUBE_USERNAME.key,
     description = "${RETURN_YOUTUBE_USERNAME.title}: ${RETURN_YOUTUBE_USERNAME.summary}",
-    use = false,
+    defaultEnable = false,   // ← Cambiado de 'use = false'
 ) {
     compatibleWith(COMPATIBLE_PACKAGE)
 
