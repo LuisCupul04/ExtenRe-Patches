@@ -14,6 +14,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.shared.litho.addLithoFilter
 import app.morphe.patches.shared.litho.emptyComponentLabel
@@ -201,7 +202,8 @@ val feedComponentsPatch = bytecodePatch(
         ) =
             matchOrThrow().let {
                 it.method.apply {
-                    val endIndex = it.patternMatch!!.endIndex
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val endIndex = it.instructionMatches.last().index
 
                     val insertIndex = endIndex + insertIndexOffset
                     val register =
@@ -297,7 +299,8 @@ val feedComponentsPatch = bytecodePatch(
                     val objectIndex = indexOfFirstInstructionOrThrow(Opcode.MOVE_OBJECT)
                     val objectRegister =
                         getInstruction<TwoRegisterInstruction>(objectIndex).registerA
-                    val jumpIndex = it.patternMatch!!.startIndex
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val jumpIndex = it.instructionMatches.first().index
 
                     addInstructionsWithLabels(
                         insertIndex, """
