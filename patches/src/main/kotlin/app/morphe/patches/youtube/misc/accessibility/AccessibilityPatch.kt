@@ -19,6 +19,7 @@ import app.morphe.util.findMethodOrThrow
 import app.morphe.util.fingerprint.mutableClassOrThrow
 import app.morphe.util.indexOfFirstInstruction
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import app.morphe.util.returnEarly
 import com.android.tools.smali.dexlib2.AccessFlags
@@ -47,15 +48,17 @@ val accessibilityPatch = bytecodePatch(
                 val lifecycleObserverClass =
                     getInstruction<ReferenceInstruction>(lifecycleObserverIndex).reference.toString()
 
-                // Reemplazar findmutableMethodOrThrow por búsqueda manual
+                // ✅ Morphe: obtener método y clase mutable
                 val method = findMethodOrThrow(lifecycleObserverClass) {
                     accessFlags == AccessFlags.PUBLIC or AccessFlags.FINAL &&
                             parameterTypes.size == 1 &&
                             indexOfFirstInstruction(Opcode.INVOKE_DIRECT) >= 0
                 }
-                val classDef = classes.find { it.type == lifecycleObserverClass }
+                // ✅ Morphe: usar classDefs en lugar de classes
+                val classDef = classDefs.find { it.type == lifecycleObserverClass }
                     ?: throw PatchException("Class not found: $lifecycleObserverClass")
-                val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+                val mutableMethod = mutableClassDefBy(classDef).methods.first {
                     MethodUtil.methodSignaturesMatch(it, method)
                 }
                 mutableMethod.returnEarly()
