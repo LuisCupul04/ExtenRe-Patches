@@ -40,6 +40,7 @@ import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.returnEarly
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -61,18 +62,18 @@ private val spoofAppVersionBytecodePatch = bytecodePatch(
             return@execute
         }
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
-                name == "SpoofAppVersion"
-            }
-            val classDef = classes.find { it.type == PATCH_STATUS_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $PATCH_STATUS_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.returnEarly(true)
+        // ✅ Morphe: obtener clase mutable correctamente
+        val method = findMethodOrThrow(PATCH_STATUS_CLASS_DESCRIPTOR) {
+            name == "SpoofAppVersion"
         }
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val classDef = classDefs.find { it.type == PATCH_STATUS_CLASS_DESCRIPTOR }
+            ?: throw PatchException("Class not found: $PATCH_STATUS_CLASS_DESCRIPTOR")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.returnEarly(true)
 
         /**
          * When spoofing the app version to YouTube 19.20.xx or earlier via Spoof app version on YouTube 19.23.xx+, the Library tab will crash.
