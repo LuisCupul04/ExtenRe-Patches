@@ -31,6 +31,7 @@ import app.morphe.util.findMethodOrThrow
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.getReference
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -114,9 +115,11 @@ val albumMusicVideoPatch = bytecodePatch(
             val method = findMethodOrThrow(onClickListenerSyntheticClass) {
                 name == "onClick"
             }
-            val classDef = classes.find { it.type == onClickListenerSyntheticClass }
+            // ✅ Morphe: usar classDefs en lugar de classes
+            val classDef = classDefs.find { it.type == onClickListenerSyntheticClass }
                 ?: throw PatchException("Class not found: $onClickListenerSyntheticClass")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
 
