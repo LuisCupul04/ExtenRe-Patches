@@ -20,9 +20,11 @@ import app.morphe.patches.reddit.utils.settings.is_2024_26_or_greater
 import app.morphe.patches.reddit.utils.settings.is_2025_06_or_greater
 import app.morphe.patches.reddit.utils.settings.settingsPatch
 import app.morphe.patches.reddit.utils.settings.updatePatchStatus
+import app.morphe.util.fingerprint.matchOrNull
 import app.morphe.util.fingerprint.mutableMethodOrThrow
 import app.morphe.util.fingerprint.resolvable
 import app.morphe.util.indexOfFirstInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
@@ -71,9 +73,10 @@ val navigationButtonsPatch = bytecodePatch(
                     val targetReference =
                         getInstruction<ReferenceInstruction>(targetIndex).reference.toString()
 
-                    classBy { it.type == targetReference }
-                        ?.mutableClass
+                    // ✅ Morphe: buscar ClassDef y obtener clase mutable
+                    val classDef = classDefs.find { it.type == targetReference }
                         ?: throw PatchException("Failed to find class $targetReference")
+                    mutableClassDefBy(classDef)
                 }
 
                 bottomNavScreenOnGlobalLayoutFingerprint.second.matchOrNull(
@@ -81,11 +84,13 @@ val navigationButtonsPatch = bytecodePatch(
                 )?.let { match ->
                     val method = match.method
                     val classDef = match.classDef
-                    val mutableMethod = proxy(classDef).mutableClass.methods.first {
+                    // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+                    val mutableMethod = mutableClassDefBy(classDef).methods.first {
                         MethodUtil.methodSignaturesMatch(it, method)
                     }
                     mutableMethod.apply {
-                        val startIndex = match.patternMatch!!.startIndex
+                        // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                        val startIndex = match.instructionMatches.first().index
                         val targetRegister =
                             getInstruction<FiveRegisterInstruction>(startIndex).registerC
 
