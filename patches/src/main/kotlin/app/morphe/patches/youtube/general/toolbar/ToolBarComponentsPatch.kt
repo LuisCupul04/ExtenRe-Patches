@@ -16,8 +16,8 @@ import app.morphe.patcher.extensions.InstructionExtensions.removeInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.youtube.utils.castbutton.castButtonPatch
 import app.morphe.patches.youtube.utils.castbutton.hookToolBarCastButton
@@ -54,6 +54,7 @@ import app.morphe.util.indexOfFirstInstruction
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.replaceLiteralInstructionCall
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -132,24 +133,24 @@ val toolBarComponentsPatch = bytecodePatch(
         val attributeResolverMethodCall =
             attributeResolverMethod.definingClass + "->" + attributeResolverMethod.name + "(Landroid/content/Context;I)Landroid/graphics/drawable/Drawable;"
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(GENERAL_CLASS_DESCRIPTOR) {
-                name == "getHeaderDrawable"
-            }
-            val classDef = classes.find { it.type == GENERAL_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $GENERAL_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.addInstructions(
-                0, """
-                    invoke-static {p0, p1}, $attributeResolverMethodCall
-                    move-result-object p0
-                    return-object p0
-                    """
-            )
+        // ✅ Morphe: obtener método mutable correctamente
+        val method = findMethodOrThrow(GENERAL_CLASS_DESCRIPTOR) {
+            name == "getHeaderDrawable"
         }
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val classDef = classDefs.find { it.type == GENERAL_CLASS_DESCRIPTOR }
+            ?: throw PatchException("Class not found: $GENERAL_CLASS_DESCRIPTOR")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.addInstructions(
+            0, """
+                invoke-static {p0, p1}, $attributeResolverMethodCall
+                move-result-object p0
+                return-object p0
+                """
+        )
 
         // The sidebar's header is lithoView. Add a listener to change it.
         drawerContentViewFingerprint.mutableMethodOrThrow(drawerContentViewConstructorFingerprint).apply {
@@ -251,12 +252,14 @@ val toolBarComponentsPatch = bytecodePatch(
         youActionBarFingerprint.matchOrThrow(setActionBarRingoFingerprint).let {
             val method = it.method
             val classDef = it.classDef
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
                 injectSearchBarHook(
-                    it.patternMatch!!.endIndex,
+                    it.instructionMatches.last().index,
                     "enableWideSearchBarInYouTab"
                 )
             }
@@ -383,11 +386,13 @@ val toolBarComponentsPatch = bytecodePatch(
         val searchBarMatch = searchBarFingerprint.matchOrThrow(searchBarParentFingerprint)
         val searchBarMethod = searchBarMatch.method
         val searchBarClassDef = searchBarMatch.classDef
-        val searchBarMutableMethod = proxy(searchBarClassDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val searchBarMutableMethod = mutableClassDefBy(searchBarClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, searchBarMethod)
         }
         searchBarMutableMethod.apply {
-            val startIndex = searchBarMatch.patternMatch!!.startIndex
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+            val startIndex = searchBarMatch.instructionMatches.first().index
             val setVisibilityIndex = indexOfFirstInstructionOrThrow(startIndex) {
                 opcode == Opcode.INVOKE_VIRTUAL &&
                         getReference<MethodReference>()?.name == "setVisibility"
@@ -405,7 +410,8 @@ val toolBarComponentsPatch = bytecodePatch(
         val searchResultMatch = searchResultFingerprint.matchOrThrow()
         val searchResultMethod = searchResultMatch.method
         val searchResultClassDef = searchResultMatch.classDef
-        val searchResultMutableMethod = proxy(searchResultClassDef).mutableClass.methods.first {
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val searchResultMutableMethod = mutableClassDefBy(searchResultClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, searchResultMethod)
         }
         searchResultMutableMethod.apply {
@@ -462,7 +468,8 @@ val toolBarComponentsPatch = bytecodePatch(
             )
             val searchSuggestionCollectionMethod = searchSuggestionCollectionMatch.method
             val searchSuggestionCollectionClassDef = searchSuggestionCollectionMatch.classDef
-            val searchSuggestionCollectionMutableMethod = proxy(searchSuggestionCollectionClassDef).mutableClass.methods.first {
+            // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+            val searchSuggestionCollectionMutableMethod = mutableClassDefBy(searchSuggestionCollectionClassDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, searchSuggestionCollectionMethod)
             }
             searchSuggestionCollectionMutableMethod.apply {
@@ -596,23 +603,23 @@ val toolBarComponentsPatch = bytecodePatch(
 
         hookToolBar("$GENERAL_CLASS_DESCRIPTOR->replaceCreateButton")
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(
-                "Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;"
-            ) {
-                name == "onCreate"
-            }
-            val classDef = classes.find { it.type == "Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;" }
-                ?: throw PatchException("Class not found: Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.addInstruction(
-                0,
-                "invoke-static {p0}, $GENERAL_CLASS_DESCRIPTOR->setShellActivityTheme(Landroid/app/Activity;)V"
-            )
+        // ✅ Morphe: obtener método mutable correctamente
+        val settingsMethod = findMethodOrThrow(
+            "Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;"
+        ) {
+            name == "onCreate"
         }
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val settingsClassDef = classDefs.find { it.type == "Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;" }
+            ?: throw PatchException("Class not found: Lcom/google/android/apps/youtube/app/application/Shell_SettingsActivity;")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val settingsMutableMethod = mutableClassDefBy(settingsClassDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, settingsMethod)
+        }
+        settingsMutableMethod.addInstruction(
+            0,
+            "invoke-static {p0}, $GENERAL_CLASS_DESCRIPTOR->setShellActivityTheme(Landroid/app/Activity;)V"
+        )
 
         // endregion
 
