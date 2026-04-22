@@ -17,12 +17,13 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.fingerprint
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.PatchException
-import app.morphe.patcher.util.proxy.mutableTypes.MutableClass
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableClass
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.util.containsLiteralInstruction
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstLiteralInstruction
 import app.morphe.util.injectLiteralInstructionViewCall
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.Method
@@ -86,8 +87,8 @@ internal fun Pair<String, Fingerprint>.originalMethodOrThrow(parentFingerprint: 
 context(BytecodePatchContext)
 internal fun Pair<String, Fingerprint>.mutableClassOrThrow(): MutableClass {
     val classDef = second.classDefOrNull ?: throw first.exception
-    // Usar proxy en lugar de mutableClassDefBy para evitar problemas de importación
-    return proxy(classDef).mutableClass
+    // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+    return mutableClassDefBy(classDef)
 }
 
 context(BytecodePatchContext)
