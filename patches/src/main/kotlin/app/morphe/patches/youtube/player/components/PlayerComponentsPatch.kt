@@ -16,7 +16,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.removeInstruction
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.MethodNavigator
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod
 import app.morphe.patcher.util.smali.ExternalLabel
 import app.morphe.patches.shared.litho.addLithoFilter
 import app.morphe.patches.shared.litho.lithoFilterPatch
@@ -77,6 +77,7 @@ import app.morphe.util.indexOfFirstInstruction
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -186,9 +187,9 @@ private val speedOverlayPatch = bytecodePatch(
                         indexOfFirstInstruction(Opcode.CMPL_FLOAT) >= 0
             }
 
-            // Adaptación: iterar sobre `classes` (ProxyClassList) y obtener mutableClass por tipo
-            classes.forEach { classDef ->
-                val mutableClass = mutableClassDefBy(classDef.type)
+            // ✅ Morphe: iterar sobre classDefs
+            classDefs.forEach { classDef ->
+                val mutableClass = mutableClassDefBy(classDef)
                 classDef.methods.forEach { method ->
                     if (method.isSyntheticMethod()) {
                         val mutableMethod = mutableClass.methods.first { target ->
@@ -238,9 +239,10 @@ private val speedOverlayPatch = bytecodePatch(
                     horizontalTouchOffsetConstructorFingerprint
                 ).let { match ->
                     with(match.method) {
-                        val patternMatch = match.patternMatch!!
-                        val jumpIndex = patternMatch.endIndex + 1
-                        val insertIndex = patternMatch.endIndex - 1
+                        // ✅ Morphe: usar instructionMatches
+                        val patternMatch = match.instructionMatches
+                        val jumpIndex = patternMatch.last().index + 1
+                        val insertIndex = patternMatch.last().index - 1
                         val insertRegister =
                             getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
@@ -250,7 +252,7 @@ private val speedOverlayPatch = bytecodePatch(
                         val slideToSeekBooleanMatch = slideToSeekMotionEventFingerprint.matchOrThrow()
                         val booleanMethod = slideToSeekBooleanMatch.method
                         val booleanClassDef = slideToSeekBooleanMatch.classDef
-                        val slideToSeekBooleanMutable = mutableClassDefBy(booleanClassDef.type).methods.first {
+                        val slideToSeekBooleanMutable = mutableClassDefBy(booleanClassDef).methods.first {
                             MethodUtil.methodSignaturesMatch(it, booleanMethod)
                         }
 
@@ -258,7 +260,7 @@ private val speedOverlayPatch = bytecodePatch(
                         val slideToSeekConstructorMatch = horizontalTouchOffsetConstructorFingerprint.matchOrThrow()
                         val constructorMethod = slideToSeekConstructorMatch.method
                         val constructorClassDef = slideToSeekConstructorMatch.classDef
-                        val slideToSeekConstructorMutable = mutableClassDefBy(constructorClassDef.type).methods.first {
+                        val slideToSeekConstructorMutable = mutableClassDefBy(constructorClassDef).methods.first {
                             MethodUtil.methodSignaturesMatch(it, constructorMethod)
                         }
 
@@ -556,11 +558,13 @@ val playerComponentsPatch = bytecodePatch(
         watermarkFingerprint.matchOrThrow(watermarkParentFingerprint).let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val insertIndex = match.patternMatch!!.endIndex
+                // ✅ Morphe: instructionMatches
+                val insertIndex = match.instructionMatches.last().index
                 val register = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
                 addInstructions(
@@ -579,11 +583,13 @@ val playerComponentsPatch = bytecodePatch(
         crowdfundingBoxFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val insertIndex = match.patternMatch!!.endIndex
+                // ✅ Morphe: instructionMatches
+                val insertIndex = match.instructionMatches.last().index
                 val register = getInstruction<TwoRegisterInstruction>(insertIndex).registerA
 
                 addInstruction(
@@ -623,11 +629,13 @@ val playerComponentsPatch = bytecodePatch(
             fingerprint.matchOrThrow().let { match ->
                 val method = match.method
                 val classDef = match.classDef
-                val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                // ✅ Morphe: mutableClassDefBy con classDef
+                val mutableMethod = mutableClassDefBy(classDef).methods.first {
                     MethodUtil.methodSignaturesMatch(it, method)
                 }
                 mutableMethod.apply {
-                    val insertIndex = match.patternMatch!!.endIndex
+                    // ✅ Morphe: instructionMatches
+                    val insertIndex = match.instructionMatches.last().index
                     val viewRegister = getInstruction<OneRegisterInstruction>(insertIndex).registerA
 
                     addInstruction(
@@ -697,11 +705,13 @@ val playerComponentsPatch = bytecodePatch(
             ).let { match ->
                 val method = match.method
                 val classDef = match.classDef
-                val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                // ✅ Morphe: mutableClassDefBy con classDef
+                val mutableMethod = mutableClassDefBy(classDef).methods.first {
                     MethodUtil.methodSignaturesMatch(it, method)
                 }
                 mutableMethod.apply {
-                    val index = match.patternMatch!!.startIndex
+                    // ✅ Morphe: instructionMatches
+                    val index = match.instructionMatches.first().index
                     val register = getInstruction<TwoRegisterInstruction>(index).registerA
 
                     hookFilmstripOverlay(index, register)
@@ -713,11 +723,13 @@ val playerComponentsPatch = bytecodePatch(
             ).let { match ->
                 val method = match.method
                 val classDef = match.classDef
-                val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+                // ✅ Morphe: mutableClassDefBy con classDef
+                val mutableMethod = mutableClassDefBy(classDef).methods.first {
                     MethodUtil.methodSignaturesMatch(it, method)
                 }
                 mutableMethod.apply {
-                    val index = match.patternMatch!!.startIndex + 2
+                    // ✅ Morphe: instructionMatches
+                    val index = match.instructionMatches.first().index + 2
                     val register = getInstruction<OneRegisterInstruction>(index).registerA
 
                     addInstructions(
@@ -781,11 +793,13 @@ val playerComponentsPatch = bytecodePatch(
         infoCardsIncognitoFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val targetIndex = match.patternMatch!!.startIndex
+                // ✅ Morphe: instructionMatches
+                val targetIndex = match.instructionMatches.first().index
                 val targetRegister =
                     getInstruction<TwoRegisterInstruction>(targetIndex).registerA
 
@@ -805,11 +819,12 @@ val playerComponentsPatch = bytecodePatch(
         linearLayoutManagerItemCountsFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
-            // Obtener el método mutable de la clase destino usando la referencia de la instrucción
-            val endIndex = match.patternMatch!!.endIndex
+            // ✅ Morphe: instructionMatches
+            val endIndex = match.instructionMatches.last().index
             val referenceInstruction = mutableMethod.getInstruction<ReferenceInstruction>(endIndex)
             val methodRef = referenceInstruction.reference as? MethodReference
                 ?: throw PatchException("No method reference at index $endIndex")
@@ -913,11 +928,13 @@ val playerComponentsPatch = bytecodePatch(
         suggestedActionsFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy con classDef
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val targetIndex = match.patternMatch!!.endIndex
+                // ✅ Morphe: instructionMatches
+                val targetIndex = match.instructionMatches.last().index
                 val targetRegister = getInstruction<OneRegisterInstruction>(targetIndex).registerA
 
                 addInstruction(
