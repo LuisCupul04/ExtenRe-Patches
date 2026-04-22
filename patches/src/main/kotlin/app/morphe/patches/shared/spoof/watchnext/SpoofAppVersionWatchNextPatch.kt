@@ -15,8 +15,8 @@ import app.morphe.patcher.patch.BytecodePatchBuilder
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable  
 import app.morphe.patches.shared.clientTypeFingerprint
 import app.morphe.patches.shared.createPlayerRequestBodyFingerprint
 import app.morphe.patches.shared.indexOfClientInfoInstruction
@@ -28,6 +28,7 @@ import app.morphe.util.indexOfFirstInstruction
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversed
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.or
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -68,7 +69,8 @@ fun spoofAppVersionWatchNextPatch(
                 clientTypeFingerprint.matchOrThrow().let {
                     with(it.method) {
                         val clientInfoIndex = indexOfClientInfoInstruction(this)
-                        val dummyClientVersionIndex = it.stringMatches!!.first().index
+                        // ✅ Morphe: stringMatches no es nullable
+                        val dummyClientVersionIndex = it.stringMatches.first().index
                         val dummyClientVersionRegister =
                             getInstruction<OneRegisterInstruction>(dummyClientVersionIndex).registerA
                         val clientVersionIndex =
@@ -109,12 +111,14 @@ fun spoofAppVersionWatchNextPatch(
             val createPlayerRequestBodyMatch = createPlayerRequestBodyFingerprint.matchOrThrow()
             val playerMethod = createPlayerRequestBodyMatch.method
             val playerClassDef = createPlayerRequestBodyMatch.classDef
-            val playerMutableMethod = proxy(playerClassDef).mutableClass.methods.first {
+            // ✅ Morphe: usar mutableClassDefBy
+            val playerMutableMethod = mutableClassDefBy(playerClassDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, playerMethod)
             }
             playerMutableMethod.apply {
                 val helperMethodName = "setClientInfo"
-                val checkCastIndex = createPlayerRequestBodyMatch.patternMatch!!.startIndex
+                // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                val checkCastIndex = createPlayerRequestBodyMatch.instructionMatches.first().index
 
                 val checkCastInstruction =
                     getInstruction<OneRegisterInstruction>(checkCastIndex)
@@ -202,7 +206,8 @@ fun spoofAppVersionWatchNextPatch(
                 watchNextSyntheticFingerprint
             ).let { result ->
                 with(result.method) {
-                    val directIndex = result.patternMatch!!.startIndex
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val directIndex = result.instructionMatches.first().index
                     val startRegister =
                         getInstruction<RegisterRangeInstruction>(directIndex).startRegister
                     val directReference =
@@ -255,7 +260,8 @@ fun spoofAppVersionWatchNextPatch(
             clientMessageFingerprint.matchOrThrow().let { clientMatch ->
                 val clientMethod = clientMatch.method
                 val clientClassDef = clientMatch.classDef
-                val clientMutableMethod = proxy(clientClassDef).mutableClass.methods.first {
+                // ✅ Morphe: usar mutableClassDefBy
+                val clientMutableMethod = mutableClassDefBy(clientClassDef).methods.first {
                     MethodUtil.methodSignaturesMatch(it, clientMethod)
                 }
                 clientMutableMethod.apply {
