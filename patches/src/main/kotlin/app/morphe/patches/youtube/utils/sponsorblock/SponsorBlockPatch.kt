@@ -177,7 +177,8 @@ val sponsorBlockBytecodePatch = bytecodePatch(
 
             segmentPlaybackControllerFingerprint.matchOrThrow().let {
                 it.method.apply {
-                    val replaceIndex = it.patternMatch!!.startIndex
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val replaceIndex = it.instructionMatches.first().index
                     val replaceRegister =
                         getInstruction<OneRegisterInstruction>(replaceIndex).registerA
 
