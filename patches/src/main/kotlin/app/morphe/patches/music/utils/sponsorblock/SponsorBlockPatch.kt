@@ -119,8 +119,9 @@ private val sponsorBlockBytecodePatch = bytecodePatch(
         rectangleFieldName =
             musicPlaybackControlsTimeBarOnMeasureFingerprint.matchOrThrow().let {
                 with(it.method) {
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
                     val rectangleIndex =
-                        indexOfFirstInstructionReversedOrThrow(it.patternMatch!!.endIndex) {
+                        indexOfFirstInstructionReversedOrThrow(it.instructionMatches.last().index) {
                             opcode == Opcode.IGET_OBJECT &&
                                     getReference<FieldReference>()?.type == "Landroid/graphics/Rect;"
                         }
@@ -399,4 +400,3 @@ val sponsorBlockPatch = resourcePatch(
 
     }
 }
-
