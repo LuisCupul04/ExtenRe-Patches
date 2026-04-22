@@ -37,8 +37,9 @@ val endScreenSuggestedVideoPatch = bytecodePatch(
          * Automatically closing the end screen suggested video is not appropriate as it will disable the autoplay behavior.
          */
         removeOnLayoutChangeListenerFingerprint.matchOrThrow().let {
+            // ✅ Morphe: usar instructionMatches en lugar de patternMatch
             val walkerIndex =
-                it.getWalkerMethod(it.patternMatch!!.endIndex)
+                it.getWalkerMethod(it.instructionMatches.last().index)
 
             walkerIndex.apply {
                 val autoNavStatusMethodName =
