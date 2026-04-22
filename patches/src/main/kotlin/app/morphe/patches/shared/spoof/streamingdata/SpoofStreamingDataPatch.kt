@@ -19,7 +19,7 @@ import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.ResourcePatchContext
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.rawResourcePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.shared.extension.Constants.EXTENSION_UTILS_CLASS_DESCRIPTOR
 import app.morphe.patches.shared.extension.Constants.PATCHES_PATH
 import app.morphe.patches.shared.extension.Constants.SPOOF_PATH
@@ -43,6 +43,7 @@ import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstStringInstructionOrThrow
 import app.morphe.util.inputStreamFromBundledResourceOrThrow
+import app.morphe.util.mutableClassDefBy
 import app.morphe.util.returnEarly
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -176,7 +177,8 @@ fun spoofStreamingDataPatch(
                     val setStreamDataMethodName = "patch_setStreamingData"
                     val resultClassDef = result.classDef
                     val resultMethodType = resultClassDef.type
-                    val setStreamingDataIndex = result.patternMatch!!.startIndex
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val setStreamingDataIndex = result.instructionMatches.first().index
                     val setStreamingDataRegister =
                         getInstruction<TwoRegisterInstruction>(setStreamingDataIndex).registerA
 
@@ -447,22 +449,22 @@ fun spoofStreamingDataPatch(
             )
         }
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow(EXTENSION_UTILS_CLASS_DESCRIPTOR) {
-                name == "setContext"
-            }
-            val classDef = classes.find { it.type == EXTENSION_UTILS_CLASS_DESCRIPTOR }
-                ?: throw PatchException("Class not found: $EXTENSION_UTILS_CLASS_DESCRIPTOR")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.apply {
-                addInstruction(
-                    implementation!!.instructions.lastIndex,
-                    "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->initializeJavascript()V"
-                )
-            }
+        // ✅ Morphe: obtener clase mutable correctamente
+        val method = findMethodOrThrow(EXTENSION_UTILS_CLASS_DESCRIPTOR) {
+            name == "setContext"
+        }
+        // ✅ Morphe: usar classDefs en lugar de classes
+        val classDef = classDefs.find { it.type == EXTENSION_UTILS_CLASS_DESCRIPTOR }
+            ?: throw PatchException("Class not found: $EXTENSION_UTILS_CLASS_DESCRIPTOR")
+        // ✅ Morphe: usar mutableClassDefBy en lugar de proxy
+        val mutableMethod = mutableClassDefBy(classDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, method)
+        }
+        mutableMethod.apply {
+            addInstruction(
+                implementation!!.instructions.lastIndex,
+                "invoke-static {}, $EXTENSION_CLASS_DESCRIPTOR->initializeJavascript()V"
+            )
         }
 
         // Copy the j2v8 library.
@@ -646,18 +648,16 @@ fun spoofStreamingDataPatch(
 
         // endregion
 
-        // Reemplazar findmutableMethodOrThrow por búsqueda manual
-        run {
-            val method = findMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
-                name == "SpoofStreamingData"
-            }
-            val classDef = classes.find { it.type == "$PATCHES_PATH/PatchStatus;" }
-                ?: throw PatchException("Class not found: $PATCHES_PATH/PatchStatus;")
-            val mutableMethod = proxy(classDef).mutableClass.methods.first {
-                MethodUtil.methodSignaturesMatch(it, method)
-            }
-            mutableMethod.returnEarly(true)
+        // ✅ Morphe: obtener clase mutable correctamente
+        val statusMethod = findMethodOrThrow("$PATCHES_PATH/PatchStatus;") {
+            name == "SpoofStreamingData"
         }
+        val statusClassDef = classDefs.find { it.type == "$PATCHES_PATH/PatchStatus;" }
+            ?: throw PatchException("Class not found: $PATCHES_PATH/PatchStatus;")
+        val statusMutableMethod = mutableClassDefBy(statusClassDef).methods.first {
+            MethodUtil.methodSignaturesMatch(it, statusMethod)
+        }
+        statusMutableMethod.returnEarly(true)
 
         executeBlock()
     }
