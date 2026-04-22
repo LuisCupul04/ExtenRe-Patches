@@ -13,7 +13,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.BytecodePatchBuilder
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
+import app.morphe.patcher.util.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.shared.extension.Constants.PATCHES_PATH
 import app.morphe.patches.shared.formatStreamModelConstructorFingerprint
 import app.morphe.util.addInstructionsAtControlFlowLabel
@@ -43,7 +43,8 @@ fun drcAudioPatch(
         val (formatFieldReference, loudnessDbFieldReference) =
             fingerprint.matchOrThrow(formatStreamModelConstructorFingerprint).let {
                 with(it.method) {
-                    val loudnessDbIndex = it.patternMatch!!.startIndex + 1
+                    // ✅ Morphe: usar instructionMatches en lugar de patternMatch
+                    val loudnessDbIndex = it.instructionMatches.first().index + 1
                     val loudnessDbFieldReference =
                         getInstruction<ReferenceInstruction>(loudnessDbIndex).reference as FieldReference
                     val formatClass = loudnessDbFieldReference.definingClass
