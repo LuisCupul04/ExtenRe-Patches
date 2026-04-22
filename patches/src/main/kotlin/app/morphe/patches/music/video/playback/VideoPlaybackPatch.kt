@@ -45,6 +45,7 @@ import app.morphe.util.indexOfFirstInstruction
 import app.morphe.util.indexOfFirstInstructionOrThrow
 import app.morphe.util.indexOfFirstInstructionReversedOrThrow
 import app.morphe.util.indexOfFirstLiteralInstructionOrThrow
+import app.morphe.util.mutableClassDefBy
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
@@ -102,11 +103,13 @@ val videoPlaybackPatch = bytecodePatch(
         playbackSpeedFingerprint.matchOrThrow(playbackSpeedParentFingerprint).let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy directo
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val startIndex = match.patternMatch!!.startIndex
+                // ✅ Morphe: instructionMatches en lugar de patternMatch
+                val startIndex = match.instructionMatches.first().index
                 val speedRegister =
                     getInstruction<OneRegisterInstruction>(startIndex + 1).registerA
 
@@ -126,13 +129,15 @@ val videoPlaybackPatch = bytecodePatch(
         val videoQualityMatch = videoQualityListFingerprint.matchOrThrow()
         val videoQualityMethod = videoQualityMatch.method
         val videoQualityClassDef = videoQualityMatch.classDef
-        val videoQualityMutableMethod = mutableClassDefBy(videoQualityClassDef.type).methods.first {
+        // ✅ Morphe: mutableClassDefBy directo
+        val videoQualityMutableMethod = mutableClassDefBy(videoQualityClassDef).methods.first {
             MethodUtil.methodSignaturesMatch(it, videoQualityMethod)
         }
 
         // Obtenemos el descriptor de la clase de calidad (ej: "Lcom/example/VideoQuality;")
         val videoQualityClass = videoQualityMutableMethod.run {
-            val listIndex = videoQualityMatch.patternMatch!!.startIndex
+            // ✅ Morphe: instructionMatches en lugar de patternMatch
+            val listIndex = videoQualityMatch.instructionMatches.first().index
             val listRegister = getInstruction<FiveRegisterInstruction>(listIndex).registerD
 
             addInstruction(
@@ -208,7 +213,8 @@ val videoPlaybackPatch = bytecodePatch(
             val match = playbackStartParametersToStringFingerprint.matchOrThrow()
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy directo
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.findFieldFromToString(FIXED_RESOLUTION_STRING)
@@ -239,11 +245,13 @@ val videoPlaybackPatch = bytecodePatch(
         userQualityChangeFingerprint.matchOrThrow().let { match ->
             val method = match.method
             val classDef = match.classDef
-            val mutableMethod = mutableClassDefBy(classDef.type).methods.first {
+            // ✅ Morphe: mutableClassDefBy directo
+            val mutableMethod = mutableClassDefBy(classDef).methods.first {
                 MethodUtil.methodSignaturesMatch(it, method)
             }
             mutableMethod.apply {
-                val endIndex = match.patternMatch!!.endIndex
+                // ✅ Morphe: instructionMatches en lugar de patternMatch
+                val endIndex = match.instructionMatches.last().index
                 val qualityChangedClass =
                     getInstruction<ReferenceInstruction>(endIndex).reference.toString()
 
