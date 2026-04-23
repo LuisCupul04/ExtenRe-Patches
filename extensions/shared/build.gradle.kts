@@ -1,15 +1,13 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    //id("com.android.library")
-    //id("com.android.application")
-    //alias(libs.plugins.kotlin.android)
+    id("com.android.library")              // ← Descomentar (y quitar comentario)
+    // id("com.android.application")        // ← No usar
+    alias(libs.plugins.kotlin.android)     // ← Si usas Kotlin en shared, descomentar
     alias(libs.plugins.protobuf)
 }
 
-//extension {
-//    name = "extensions/shared.mpe"
-//}
+// extension { name = ... }  // ← Eliminar o mantener comentado (no debe tener)
 
 android {
     namespace = "app.morphe.extension"
@@ -22,7 +20,6 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
-
             ndk {
                 abiFilters.add("armeabi-v7a")
                 abiFilters.add("arm64-v8a")
