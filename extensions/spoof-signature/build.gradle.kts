@@ -1,6 +1,6 @@
-plugins {
-    id("com.android.application")
-}
+//plugins {
+//    id("com.android.application")
+//}
 
 extension {
     name = "extensions/all/misc/signature/spoof-signature.mpe"
