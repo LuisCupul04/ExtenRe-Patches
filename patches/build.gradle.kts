@@ -15,51 +15,47 @@ patches {
 
 dependencies {
     implementation(libs.gson)
-    implementation(libs.morphe.patcher)   // Asegúrate de que esta dependencia existe en libs.versions.toml
+    implementation(libs.morphe.patcher)
 }
 
 tasks {
-    // ✅ Cambio crucial: incluir las extensiones (.mpe) dentro del .mpp
+    // Bundle de parches (.mpp) que incluye las extensiones .mpe
     jar {
         archiveExtension.set("mpp")
         exclude("app/morphe/generator")
-        // 👇 Esto empaqueta todos los .mpe generados en la carpeta extensions/
+        // Incluye todos los archivos .mpe generados en la carpeta extensions/
         from(rootProject.rootDir) {
             include("extensions/**/*.mpe")
         }
     }
 
-    // JAR estándar para publicación como biblioteca (no es necesario para el .mpp, pero lo dejo)
+    // JAR estándar para publicación como biblioteca
     register<Jar>("libraryJar") {
         archiveClassifier.set("")
         from(sourceSets.main.get().output)
         exclude("app/morphe/generator")
     }
 
-    // ✅ Cambio de nombre y clase principal (para generar patches-list.json)
+    // Genera patches-list.json
     register<JavaExec>("generatePatchesList") {
         description = "Generate patches list JSON"
         dependsOn(build)
         classpath = sourceSets["main"].runtimeClasspath
-        // Asegúrate de que esta clase exista en tu proyecto. Si usas el generador de Morphe, debería ser:
+        // Asegúrate de que esta clase exista
         mainClass.set("app.morphe.generator.MainKt")
-        // Alternativa si tienes una clase diferente: mainClass.set("app.morphe.util.PatchListGeneratorKt")
     }
 
-    // Configurar la tarea sourcesJar existente
     named<Jar>("sourcesJar") {
         from(sourceSets.main.get().allSource)
     }
 
-    // Tarea usada por gradle-semantic-release-plugin
     publish {
-        dependsOn("generatePatchesList")   // ✅ Cambiado para que use la nueva tarea
+        dependsOn("generatePatchesList")
     }
 }
 
 kotlin {
     compilerOptions {
-        // ✅ Parámetro recomendado para Morphe (ya no se usa -Xcontext-receivers)
         freeCompilerArgs = listOf("-Xcontext-parameters")
     }
 }
