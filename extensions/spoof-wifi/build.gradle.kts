@@ -1,6 +1,6 @@
-plugins {
-    id("com.android.application")
-}
+//plugins {
+//    id("com.android.application")
+//}
 
 extension {
     name = "extensions/all/connectivity/wifi/spoof/spoof-wifi.mpe"
