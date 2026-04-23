@@ -2,10 +2,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.library")
-    // No aplicar kotlin explícitamente (el plugin de Morphe ya lo provee)
-    // Si necesitas protobuf, añade la línea siguiente:
+    //id("com.android.application")
+    //alias(libs.plugins.kotlin.android)
     alias(libs.plugins.protobuf)
 }
+
+//extension {
+//    name = "extensions/shared.mpe"
+//}
 
 android {
     namespace = "app.morphe.extension"
@@ -18,6 +22,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+
             ndk {
                 abiFilters.add("armeabi-v7a")
                 abiFilters.add("arm64-v8a")
@@ -55,7 +60,6 @@ dependencies {
     compileOnly(project(":extensions:shared:stub"))
 }
 
-// Si más adelante necesitas generar protos, descomenta esto
 protobuf {
     protoc {
         artifact = libs.protobuf.protoc.get().toString()
