@@ -48,12 +48,11 @@ jobs:
                     :extensions:spoof-signature:syncExtension \
                     :extensions:spoof-wifi:syncExtension \
                     :patches:jar \
-                    generatePatchesFiles
+                    :patches:generatePatchesList
 
       - name: Get patch file name
         id: patch_name
         run: |
-          # Ajusta la ruta según donde genere el .mpp tu build
           PATCH_FILE=$(ls patches/build/libs/*.mpp | head -n 1)
           echo "PATCH_FILE=$PATCH_FILE" >> $GITHUB_OUTPUT
           echo "PATCH_BASENAME=$(basename $PATCH_FILE)" >> $GITHUB_OUTPUT
