@@ -30,6 +30,5 @@ protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.
 
 [plugins]
 kotlin-android = { id = "org.jetbrains.kotlin.android" }
-android-application = { id = "com.android.application", version.ref = "agp" }  # opcional version
 android-library = { id = "com.android.library", version.ref = "agp" }         # ← nueva línea
 protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }
