@@ -2,6 +2,10 @@ plugins {
     id("com.android.library")
 }
 
+dependencies {
+    compileOnly(libs.protobuf.javalite)
+}
+
 android {
     namespace = "app.morphe.extension"
     compileSdk = 35
