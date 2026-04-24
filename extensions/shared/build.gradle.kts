@@ -1,46 +1,20 @@
+// extensions/shared/build.gradle.kts
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id("com.android.library")
-    //id("com.android.application")
-    //alias(libs.plugins.kotlin.android)
+    kotlin("jvm")
+    `java-library`
     alias(libs.plugins.protobuf)
 }
 
-//extension {
-//    name = "extensions/shared.mpe"
-//}
-
-android {
-    namespace = "app.morphe.extension"
-    compileSdk = 35
-
-    defaultConfig {
-        minSdk = 24
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = true
-
-            ndk {
-                abiFilters.add("armeabi-v7a")
-                abiFilters.add("arm64-v8a")
-                abiFilters.add("x86")
-                abiFilters.add("x86_64")
-            }
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
@@ -56,21 +30,21 @@ dependencies {
 
     implementation("com.github.ynab:J2V8:6.2.1-16kb.2@aar")
 
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
+    // coreLibraryDesugaring no es necesario en JVM
     compileOnly(project(":extensions:shared:stub"))
 }
 
-// protobuf {
-//     protoc {
-//         artifact = libs.protobuf.protoc.get().toString()
-//     }
-//     generateProtoTasks {
-//         all().forEach { task ->
-//             task.builtins {
-//                 create("java") {
-//                     option("lite")
-//                 }
-//             }
-//         }
-//     }
-// }
+protobuf {
+    protoc {
+        artifact = libs.protobuf.protoc.get().toString()
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
