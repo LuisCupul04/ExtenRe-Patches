@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.library")
-    alias(libs.plugins.kotlin.android)
+//    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.protobuf)
 }
 
@@ -59,17 +59,17 @@ dependencies {
     compileOnly(project(":extensions:shared:stub"))
 }
 
-protobuf {
-    protoc {
-        artifact = libs.protobuf.protoc.get().toString()
-    }
-    generateProtoTasks {
-        all().forEach { task ->
-            task.builtins {
-                create("java") {
-                    option("lite")
-                }
-            }
-        }
-    }
-}
+//protobuf {
+//    protoc {
+//        artifact = libs.protobuf.protoc.get().toString()
+//    }
+//    generateProtoTasks {
+//        all().forEach { task ->
+//            task.builtins {
+//                create("java") {
+//                    option("lite")
+//                }
+//            }
+//        }
+//    }
+//}
