@@ -1,11 +1,11 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-//plugins {
+plugins {
     id("com.android.library")
     //id("com.android.application")
     //alias(libs.plugins.kotlin.android)
     //alias(libs.plugins.protobuf)
-//}
+}
 
 //extension {
 //    name = "extensions/shared.mpe"
