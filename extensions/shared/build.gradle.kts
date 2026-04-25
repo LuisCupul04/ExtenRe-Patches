@@ -1,23 +1,46 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.protobuf)   // solo protobuf
+    id("com.android.library")
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.protobuf)
 }
 
-// No aplicar kotlin("jvm") ni java-library
-// No aplicar com.android.library ni com.android.application
+extension {
+    name = "extensions/shared.mpe"
+}
 
-// Configuración de Kotlin (si el plugin de Kotlin ya está disponible)
+android {
+    namespace = "app.morphe.extension"
+    compileSdk = 35
+
+    defaultConfig {
+        minSdk = 24
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+
+            ndk {
+                abiFilters.add("armeabi-v7a")
+                abiFilters.add("arm64-v8a")
+                abiFilters.add("x86")
+                abiFilters.add("x86_64")
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
-}
-
-// Configuración de Java (para compatibilidad)
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {
@@ -32,7 +55,7 @@ dependencies {
 
     implementation("com.github.ynab:J2V8:6.2.1-16kb.2@aar")
 
-    // coreLibraryDesugaring no es necesario aquí (módulo JVM)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     compileOnly(project(":extensions:shared:stub"))
 }
 
