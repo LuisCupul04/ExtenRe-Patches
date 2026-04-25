@@ -1,10 +1,11 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-plugins {
-    id("com.android.library")
-//    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.protobuf)
-}
+//plugins {
+    //id("com.android.library")
+    //id("com.android.application")
+    //alias(libs.plugins.kotlin.android)
+    //alias(libs.plugins.protobuf)
+//}
 
 //extension {
 //    name = "extensions/shared.mpe"
@@ -59,17 +60,17 @@ dependencies {
     compileOnly(project(":extensions:shared:stub"))
 }
 
-//protobuf {
-//    protoc {
-//        artifact = libs.protobuf.protoc.get().toString()
-//    }
-//    generateProtoTasks {
-//        all().forEach { task ->
-//            task.builtins {
-//                create("java") {
-//                    option("lite")
-//                }
-//            }
-//        }
-//    }
-//}
+// protobuf {
+//     protoc {
+//         artifact = libs.protobuf.protoc.get().toString()
+//     }
+//     generateProtoTasks {
+//         all().forEach { task ->
+//             task.builtins {
+//                 create("java") {
+//                     option("lite")
+//                 }
+//             }
+//         }
+//     }
+// }
