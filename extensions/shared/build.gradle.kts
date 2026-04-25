@@ -6,9 +6,9 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
-extension {
-    name = "extensions/shared.mpe"
-}
+//extension {
+//    name = "extensions/shared.mpe"
+//}
 
 android {
     namespace = "app.morphe.extension"
