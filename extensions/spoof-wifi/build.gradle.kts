@@ -27,6 +27,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared"))
     compileOnly(libs.annotation)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
