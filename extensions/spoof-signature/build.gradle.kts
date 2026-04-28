@@ -27,5 +27,6 @@ android {
 }
 
 dependencies {
+    implementation(project(":shared"))
     implementation(libs.hiddenapi)
 }
