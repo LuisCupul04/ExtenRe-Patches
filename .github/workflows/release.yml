@@ -43,12 +43,11 @@ jobs:
           sed -i "s/^version=.*/version=${{ steps.get_version.outputs.VERSION }}/" gradle.properties
 
       - name: Build and generate patches
-        run: |
-          ./gradlew :extensions:shared:syncExtension \
-                    :extensions:spoof-signature:syncExtension \
-                    :extensions:spoof-wifi:syncExtension \
-                    :patches:jar \
-                    :patches:generatePatchesList
+  run: |
+    ./gradlew :extensions:spoof-signature:syncExtension \
+              :extensions:spoof-wifi:syncExtension \
+              :patches:jar \
+              :patches:generatePatchesList
 
       - name: Get patch file name
         id: patch_name
